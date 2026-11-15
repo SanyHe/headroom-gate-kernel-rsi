@@ -78,7 +78,9 @@ Key paths:
 
 ## 5. Compute
 
-All timing runs use the H20 host. Local work is limited to: the gate, the ledger,
+All timing runs happen on a GPU host. The five archived cases were measured on
+the H20; `swiglu-fusion-b4096-h7168-rtx6000d` was measured on an RTX 6000D under
+`protocol/gate_rules.v2.yaml`. Local work is limited to: the gate, the ledger,
 statistics, case registration, the run-script contract, the P3 selector, tests,
 and docs. Anything that needs `torch.cuda` is `blocked` until a GPU session.
 

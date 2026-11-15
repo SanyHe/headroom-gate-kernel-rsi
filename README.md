@@ -16,7 +16,8 @@ measurements.
 1. **Bytes.** The workload's compulsory traffic (weights + activations + output)
    is summed. It cannot be argued down.
 2. **Floor.** `max(bytes / BW_eff, flops / FLOP_eff)` — 3.30 TB/s and 138 TFLOPS
-   on the H20 host, both measured, not spec-sheet. An optional same-bytes
+   on the archived H20 host, both measured, not spec-sheet; the RTX case re-pins
+   its constants in `protocol/gate_rules.v2.yaml`. An optional same-bytes
    reference kernel raises this floor and can never lower it.
 3. **Headroom.** `measured_median - floor` is the only slack that exists.
 4. **Addressable.** `min(claim × headroom, removable_bytes / BW, removable_ms)`.
