@@ -175,7 +175,7 @@
     },
     {
       "en": "The end-to-end run swaps only the MLP activation and merges gate_up. Attention, quantization and sampler kernels are untouched.",
-      "zh": "端到端只替换 MLP 激活并合并 gate_up，注意力、量化和采样内核都未改动。"
+      "zh": "端到端只替换 MLP 激活并合并 gate_up，注意力、量化和采样Kernel都未改动。"
     },
     {
       "en": "The model-level result is a boundary condition, not a null result. The 4096-token prefill is launch-bound (CPU enqueue about 238 ms of a 506 ms step); saving 8.3 ms of activation GPU time does not move wall time, and deleting the activation entirely still takes 505–506 ms. Fusion converts only when the step is GPU-bound.",
