@@ -23,7 +23,7 @@
       "upper_point": 2.151,
       "upper_range": [2.147, 2.155],
       "reason": "176 MB stream fused to one pass on RTX 6000D; a same-bytes add takes 0.108 ms.",
-      "reason_zh": "176 MB 流在 RTX 6000D 上一次读完；同字节量的 add 只要 0.108 ms。"
+      "reason_zh": "176 MB 流在 RTX 6000D 上一次读完；跑同样字节的 add 只要 0.108 ms。"
     },
     {
       "id": "swiglu-fusion-b4096-h7168",

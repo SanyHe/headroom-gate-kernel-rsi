@@ -12,7 +12,7 @@
 | `workload.bytes` | 必需流量，按 `weights / activations / output` 分项 |
 | `workload.flops` | 已发生（不是理论）的浮点运算量 |
 | `workload.measured_ms` | 逐次实测样本；中位数与区间都从这里来 |
-| `workload.empirical_floor_ms` | 同字节参考 kernel 的实测耗时（可选，但 GO 必需） |
+| `workload.empirical_floor_ms` | 同样字节的参考 kernel 的实测耗时（可选，但 GO 必需） |
 | `mechanism.removable_bytes` | 机制声称能删掉的字节 |
 | `mechanism.removable_ms` | 机制声称能删掉的时间，须附来源 |
 | `mechanism.addressable_share_claim` | 机制覆盖的余量比例，∈ [0, 1] |
@@ -33,7 +33,7 @@ floor     = max(t_mem, t_compute)
 0.95–2.57 TB/s），解析地板会凭空造出余量。因此案例可以给出“同样字节的参考 kernel”
 耗时，闸门取 `max(analytic, empirical)`。因为地板只升不降，P1（预测 ≥ 实现）按构造安全。
 
-## 3. 可寻址：三向裁剪
+## 3. 可兑现空间：三重约束
 
 ```
 headroom  = max(0, t_measured - floor)
@@ -42,7 +42,7 @@ byte_cap  = removable_bytes / (BW_eff · 1e12) · 1e3
 applied   = min(claimed, byte_cap, removable_ms, headroom)
 ```
 
-字节账本封顶是物理约束：一个机制不可能删掉比它触碰的字节更多的时间。
+字节账本是硬约束：一个机制不可能删掉比它实际覆盖的字节更多的时间。
 时间账本是第二道：一个延迟主导的机制（例如 0.11 ms 的 selector）只能拿 0.11 ms。
 `applied < claimed` 会被记录为 `capped_by_accounting`，而不是悄悄吞掉。
 
@@ -73,8 +73,7 @@ applied   = min(claimed, byte_cap, removable_ms, headroom)
 
 ## 6. `INVALID` 不是失败，是数据坏了
 
-- `measured_median < floor`（0.1% 容差）：说明账本或参考 kernel 有错。闸门拒绝裁剪，
-  因为裁剪会制造出正数余量，把错误变成绿灯。
+- `measured_median < floor`（0.1% 容差）：说明账本或参考 kernel 有错。闸门不会帮你下调地板来兜底，因为那样会凭空造出正数余量，把错误变成绿灯。
 - 缺少必需字段、未知 dtype、越界比例、机制类不在白名单、精度/模型/接受率/输出分布被改动。
 - `rules_sha256` 与当前规则文件不一致。
 
