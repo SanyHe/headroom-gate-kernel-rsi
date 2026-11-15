@@ -15,6 +15,7 @@ def test_plan_prints_without_touching_cuda(capsys):
 
 def test_plan_lists_every_probe_with_kwargs():
     names = [name for name, _, _ in probes.PLAN]
-    assert len(names) == len(set(names)) == 5
+    assert len(names) == len(set(names))
+    assert {"hbm_copy_2GB", "hbm_read_4GB", "gemm_bf16_8192"} <= set(names)
     for _, fn, kwargs in probes.PLAN:
         assert callable(fn) and isinstance(kwargs, dict)

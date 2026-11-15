@@ -1,0 +1,71 @@
+# FROZEN v2 — host-specific device constants for this GPU host.
+# v1.1.0 remains the identity of the five archived H20 verdicts; this file only
+# re-bases the device section for the hardware measured here, and nothing else.
+# Every verdict produced here cites sha256(this file) and version 2.0.0.
+version: "2.0.0"
+frozen_at: "2026-11-15"
+
+device:
+  name: "NVIDIA RTX 6000D"
+  # No vendor number was available for this SKU; left null rather than invented.
+  hbm_spec_tbs: null
+  # Measured with gate.probes on 2026-11-15, L2-flushed, three-stream
+  # (2 reads + 1 write) at 176 MB of traffic: 1.613 TB/s. This is the
+  # operator-scale constant, because the gate prices per-case working sets.
+  # Sustained copy at 2-4 GB is only 1.29 TB/s and stream at 1 GB is 1.36 TB/s;
+  # large-working-set cases must therefore carry a same-bytes empirical floor.
+  hbm_realistic_tbs: 1.613
+  # Lower of the two 8192^3 BF16 GEMM medians measured on this host; using the
+  # lower value keeps compute-bound floors conservative.
+  bf16_peak_tflops: 136.8
+  notes: >
+    Bandwidth on this card is working-set dependent (L2 residency): a 2-4 GB
+    copy measures 1.29 TB/s, a 176 MB three-stream kernel 1.613 TB/s. v2 fixes
+    BW_eff at the operator scale so the analytic floor is a real lower bound for
+    the pre-registered operator cases. Nothing else differs from v1.1.0:
+    thresholds, statistics, scope and measurement protocol are unchanged.
+
+decision:
+  go_min_speedup: 1.30
+  veto_below_speedup: 1.15
+  min_headroom_fraction: 0.02
+  min_repeats_go: 5
+  max_cv_for_go: 0.02
+  assumed_cv_single_sample: 0.02
+  z90: 1.6448536269514722
+  require_empirical_floor_for_go: true
+
+floor_model:
+  empirical_floor: optional
+  applied_as: max(analytic_roofline, empirical_reference_kernel)
+  notes: >
+    Unchanged from v1.1.0. Because BW_eff is now calibrated at the operator
+    working set, the analytic floor and the same-bytes reference agree to about
+    1 % on the SwiGLU case; the empirical floor still wins whenever it is higher.
+
+statistics:
+  bootstrap_resamples: 10000
+  seed: 20261114
+  ci_lower_pct: 5.0
+  ci_upper_pct: 95.0
+
+scope:
+  forbidden_changes:
+    - changes_precision
+    - changes_model
+    - changes_acceptance
+    - changes_output_distribution
+  allowed_mechanism_classes:
+    - fusion
+    - tiling
+    - persistent
+    - launch-reduction
+    - layout
+
+measurement:
+  min_samples_for_evidence: 1
+  noise_floor_fraction: 0.01
+  warmup_default: 10
+  notes: >
+    Anything below 1 % is "not measurable" on this harness and must not be
+    reported as a gain, in either direction.

@@ -1,0 +1,82 @@
+{
+  "kind": "hgk_case_comparison",
+  "case_id": "swiglu-fusion-b4096-h7168-rtx6000d",
+  "measurement_case_id": "swiglu-fusion-b4096-h7168",
+  "generated_at": "2026-11-15T14:58:05+08:00",
+  "device": "NVIDIA RTX 6000D",
+  "torch": "2.13.0+cu130",
+  "cuda": "13.0",
+  "triton": "3.7.1",
+  "shape": {
+    "batch_tokens": 4096,
+    "hidden": 7168
+  },
+  "dtype": "bf16",
+  "ledger_bytes": 176160768,
+  "sources": {
+    "baseline": "cases-rtx/swiglu-fusion-b4096-h7168-rtx6000d/evidence/baseline_20261115T143526.json",
+    "candidate": "cases-rtx/swiglu-fusion-b4096-h7168-rtx6000d/evidence/candidate_20261115T144154.json"
+  },
+  "arms": {
+    "baseline": {
+      "median_ms": 0.22865600138902664,
+      "cv": 0.004980536214239263,
+      "gbps": 770.4183005469721
+    },
+    "contiguous_baseline": {
+      "median_ms": 0.16342400014400482,
+      "cv": 0.04243656904574928
+    },
+    "reference": {
+      "median_ms": 0.10833599790930748,
+      "cv": 0.008593474952144312,
+      "gbps": 1626.0594022263165
+    },
+    "control": {
+      "median_ms": 0.23497600108385086,
+      "cv": 0.006958832333790916,
+      "gbps": 749.6968506887531
+    },
+    "candidate": {
+      "median_ms": 0.12204799801111221,
+      "cv": 0.021670709247850743,
+      "gbps": 1443.372860437751
+    }
+  },
+  "headroom_ratio": 2.110618869089515,
+  "contiguous_headroom_ratio": 1.5084921290964963,
+  "paired_speedup": {
+    "n": 20,
+    "mean_diff": 1.91595,
+    "ci95": [
+      1.899668,
+      1.930757
+    ],
+    "excludes_zero": true,
+    "method": "paired_ratio_bootstrap",
+    "resamples": 20000
+  },
+  "speedup_of_medians": 1.9252753417754283,
+  "correctness": {
+    "round_silu": {
+      "bitwise_equal": 29360128,
+      "elements": 29360128,
+      "bitwise_fraction": 1.0,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0
+    },
+    "fp32_silu": {
+      "bitwise_equal": 21292786,
+      "elements": 29360128,
+      "bitwise_fraction": 0.7252280116081238,
+      "max_abs_diff": 0.0625,
+      "mean_abs_diff": 0.0004762587195727974
+    }
+  },
+  "checks": {
+    "candidate_at_or_above_reference": true,
+    "candidate_ratio_to_reference": 1.1265691955252364,
+    "bitwise_fraction": 1.0,
+    "paired_ci_excludes_one": true
+  }
+}

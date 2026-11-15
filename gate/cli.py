@@ -44,7 +44,7 @@ def evaluate_case(case_dir, gate_rules, rules_sha, rules_version):
 
 
 def cmd_one(args):
-    gate_rules, rules_sha = rules_mod.load_rules()
+    gate_rules, rules_sha = rules_mod.load_rules(args.rules)
     version = gate_rules["version"]
     if args.all:
         case_dirs = sorted(p.parent for p in CASES.glob("*/case.yaml"))
@@ -101,6 +101,8 @@ def main(argv=None):
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--record", action="store_true")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--rules", default=None,
+                    help="rules file (default: protocol/gate_rules.yaml)")
     ap.add_argument("--verify-ledger", action="store_true")
     args = ap.parse_args(argv)
 

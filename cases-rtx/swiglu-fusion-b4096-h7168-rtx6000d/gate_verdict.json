@@ -1,0 +1,105 @@
+{
+  "kind": "hgk_gate_verdict",
+  "schema_version": "1.0.0",
+  "case_id": "swiglu-fusion-b4096-h7168-rtx6000d",
+  "title": "Fuse SwiGLU (silu + mul) into one streaming pass (RTX 6000D re-registration)",
+  "verdict": "GO",
+  "reasons": [
+    "conservative upper bound 2.1474x >= go line 1.3x"
+  ],
+  "rules_version": "2.0.0",
+  "rules_sha256": "159a6d8c8974347242b17333eca03751a7151028599c5b2f1ddfcf4008555e24",
+  "hypothesis": "The archived H20 case is not transportable to a different memory system, so this is a separate pre-registration on the AutoDL RTX 6000D host. The claim is unchanged: an MLP block at 4096 tokens with hidden 7168 keeps its gate and up projections in one [4096, 14336] bf16 buffer, and the shipped F.silu(x[:, :7168]) * x[:, 7168:] launches two kernels and round-trips a 58.7 MB silu intermediate. A single fused pass that reads the 117.4 MB buffer once and writes 58.7 MB is expected to recover most of the gap to a kernel that moves the same bytes.\n",
+  "mechanism": {
+    "name": "one fused silu_and_mul pass over the interleaved gate/up buffer",
+    "class": "fusion",
+    "justification": "torch.add(a, b) moves exactly the fused kernel's bytes with the same contiguous access pattern and finishes in 0.10834 ms, so the missing time is addressable, not a property of the workload. The fused Triton kernel is bit-identical to the shipped path, so the output distribution is unchanged.\n"
+  },
+  "checks": {
+    "n_samples": 20,
+    "n_ge_min_repeats_go": true,
+    "cv": 0.006959,
+    "cv_le_max": true,
+    "headroom_fraction_ge_min": true,
+    "empirical_floor_present": true,
+    "floor_source": "analytic",
+    "accounting_caps_claim": false,
+    "out_of_scope_clean": true
+  },
+  "floor": {
+    "bytes_total": 176160768,
+    "flops": 176160768,
+    "bandwidth_tbs": 1.613,
+    "tflops": 136.8,
+    "t_mem_ms": 0.109213,
+    "t_compute_ms": 0.001288,
+    "t_floor_ms": 0.109213,
+    "regime": "memory",
+    "arithmetic_intensity": 1.0,
+    "analytic_floor_ms": 0.109213,
+    "empirical_floor_ms": 0.108336,
+    "floor_source": "analytic"
+  },
+  "measurement": {
+    "n": 20,
+    "median_ms": 0.23497600108385086,
+    "lo_ms": 0.23452800512313843,
+    "hi_ms": 0.23529599606990814,
+    "cv": 0.006959,
+    "band_method": "bootstrap",
+    "source": "cases-rtx/swiglu-fusion-b4096-h7168-rtx6000d/evidence/candidate_20261115T144154.json#control_ms",
+    "raw_samples_ms": [
+      0.24076800048351288,
+      0.23561599850654602,
+      0.23478400707244873,
+      0.23500800132751465,
+      0.2340800017118454,
+      0.23583999276161194,
+      0.23228800296783447,
+      0.23545600473880768,
+      0.23452800512313843,
+      0.23510399460792542,
+      0.234047994017601,
+      0.23529599606990814,
+      0.2338559925556183,
+      0.23494400084018707,
+      0.2338559925556183,
+      0.23558400571346283,
+      0.23465600609779358,
+      0.2351360023021698,
+      0.23334400355815887,
+      0.2359679937362671
+    ]
+  },
+  "headroom": {
+    "median_ms": 0.12576300108385086,
+    "fraction": 0.535216364665992,
+    "at_fast_end_ms": 0.12531500512313842,
+    "at_slow_end_ms": 0.12608299606990814
+  },
+  "addressable": {
+    "removable_bytes": 0,
+    "byte_cap_ms": 0.0,
+    "removable_ms": 0.12664000317454338,
+    "removable_ms_source": "cases-rtx/swiglu-fusion-b4096-h7168-rtx6000d/evidence/candidate_20261115T144154.json#control_median_ms",
+    "cap_ms": 0.12664000317454338,
+    "claimed_share": 1.0,
+    "claimed_ms_median": 0.12576300108385086,
+    "applied_ms_median": 0.12576300108385086,
+    "effective_share_median": 1.0
+  },
+  "prediction": {
+    "speedup_upper_min": 2.1474367073804257,
+    "speedup_upper_point": 2.1515387461552273,
+    "speedup_upper_max": 2.1544687543599035,
+    "best_case_ms_min": 0.109213,
+    "best_case_ms_point": 0.109213,
+    "best_case_ms_max": 0.109213,
+    "interval_method": "bootstrap"
+  },
+  "decision_trace": [
+    "conservative upper bound 2.1474x >= go line 1.3x"
+  ],
+  "generated_at": "2026-11-15T14:57:57+08:00",
+  "case_sha256": "9995fbc642e19be0cf6932216c562d0ab577fee1955017643e75a5501ca00483"
+}
