@@ -4,7 +4,7 @@
 
 大多数 kernel 文章都朝同一个方向失真——上限从未被写出来，于是任何提升都像进展。这个仓库把上限变成输入。五个预注册案例（1 个 GO、4 个 NO-GO）在没有 GPU 的笔记本上复算出归档判决，因为闸门只是对已记录测量做的纯算术。
 
-[English](./README.md) · **简体中文**
+[English](./README.md) · **简体中文** · [结果看板](https://sanyhe.github.io/headroom-gate-kernel-rsi/)
 
 ## 一屏看懂闸门
 
@@ -43,7 +43,7 @@ python3 -m gate.cli --verify-ledger               # 主张 P1：realised <= pred
 ## 判决承诺什么
 
 - **P1 棘轮。** 任何实测加速不得超过预测上限；由 `ledger.jsonl` 机械检查。
-- **P2 不相交。** 评估算子不出现在测量案例里；GPU 脚本落地时按构造保证。
+- **P2 不相交。** 评估算子不出现在测量案例里；按构造保证。封存运行器已落地并在第二台主机上运行过，事后冻结已注明。
 - **范围可证。** `out_of_scope_checks`（精度、模型、接受率、输出分布）触发即判 `INVALID`，不进行口头讨论。
 - **身份可复现。** 每个判决内嵌 `protocol/gate_rules.yaml` 的 sha256；漂移会被发现，而不是被讨论。
 
@@ -64,7 +64,11 @@ python3 -m gate.cli --verify-ledger               # 主张 P1：realised <= pred
 | 冻结的 P3 策略与确定性选择器 | `p3/policy.md`、`p3/select.py` |
 | 71 个 CPU 测试 | `tests/` |
 
-等待 GPU 主机（标记为 `blocked`，不伪造）：基线/候选计时脚本、Triton kernel 与 CUDA 扩展、封存留出运行器、dispatch 微基准、Qwen3-8B 端到端采集、P3 池测量。
+在第二台主机（RTX 6000D，v2 常数）上实测：算子层 Triton 1.92×、CUDA 2.12×，输出逐位一致；
+留出形状保持 1.88× / 1.30× / 1.72×；P1 棘轮未违规。模型层同一融合约为 1.00×：
+4096 token 的 prefill 是发射受限的，省下的 8.3 ms 激活 GPU 时间不会改变 506 ms 的一步。
+这就是对外发布的边界条件——见 [03 — 评估](./docs/03-eval.md#6-第二台主机一个边界条件结果)。
+仍待完成：P3 低比特池测量（策略已冻结，池未测量）。
 
 因此，五个归档判决是从 `case.yaml` 里记录的 `measured_ms` 复算出来的，没有重新测量。
 所用样本全部内嵌在案例文件中；原始归档为私有，不再分发。`case.yaml` 只追加、不改写；
@@ -88,7 +92,7 @@ private/                   harness 状态（gitignore）
 
 - [01 — 闸门](./docs/01-gate.md)：账本、地板、裁剪、区间、判决。
 - [02 — 测量](./docs/02-measurement.md)：计时协议与后台运行契约。
-- [03 — 评估](./docs/03-eval.md)：P1/P2、五个复算，以及本仓库唯一一处诚实的偏差。
+- [03 — 评估](./docs/03-eval.md)：P1/P2、五个复算、第二台主机的边界条件，以及本仓库唯一一处诚实的偏差。
 - [04 — P3](./docs/04-p3.md)：预注册选择与联合影响规则。
 
 ## 许可

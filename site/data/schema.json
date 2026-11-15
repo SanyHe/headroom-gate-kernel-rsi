@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sanyhe.github.io/headroom-gate-kernel-rsi/data/schema.json",
+  "title": "Headroom Gate site data",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "repo", "summary", "cases", "host", "host_run", "sealed", "crosscheck", "dispatch", "e2e", "p3", "caveats"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "repo": {
+      "type": "object",
+      "required": ["owner", "name", "url", "site", "license"],
+      "properties": {
+        "owner": { "type": "string" },
+        "name": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "site": { "type": "string", "format": "uri" },
+        "license": { "type": "string" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["cases", "go", "no_go", "inconclusive", "hosts"],
+      "properties": {
+        "cases": { "type": "integer" },
+        "go": { "type": "integer" },
+        "no_go": { "type": "integer" },
+        "inconclusive": { "type": "integer" },
+        "hosts": { "type": "integer" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "verdict", "upper_point", "upper_range", "reason"],
+        "properties": {
+          "id": { "type": "string" },
+          "verdict": { "enum": ["GO", "NO-GO", "INCONCLUSIVE"] },
+          "upper_point": { "type": "number" },
+          "upper_range": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+          "reason": { "type": "string" },
+          "reason_zh": { "type": "string" }
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "required": ["id", "device", "torch", "cuda", "triton", "rules", "hbm_realistic_tbs"],
+      "properties": {
+        "id": { "type": "string" },
+        "device": { "type": "string" },
+        "torch": { "type": "string" },
+        "cuda": { "type": "string" },
+        "triton": { "type": "string" },
+        "rules": { "type": "string" },
+        "hbm_realistic_tbs": { "type": "number" }
+      }
+    },
+    "host_run": {
+      "type": "object",
+      "required": ["case_id", "verdict", "predicted", "realised", "realised_vs_predicted"],
+      "properties": {
+        "case_id": { "type": "string" },
+        "verdict": { "enum": ["GO", "NO-GO", "INCONCLUSIVE"] },
+        "predicted": {
+          "type": "object",
+          "required": ["point", "min", "max"],
+          "properties": { "point": { "type": "number" }, "min": { "type": "number" }, "max": { "type": "number" } }
+        },
+        "realised": {
+          "type": "object",
+          "required": ["speedup", "ci95", "impl"],
+          "properties": {
+            "speedup": { "type": "number" },
+            "ci95": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+            "impl": { "type": "string" }
+          }
+        },
+        "realised_vs_predicted": { "type": "number" }
+      }
+    },
+    "sealed": {
+      "type": "object",
+      "required": ["status", "manifest_sha256", "all_accepted", "bitwise_fraction", "holdouts", "note"],
+      "properties": {
+        "status": { "enum": ["post_hoc_freeze", "blind"] },
+        "manifest_sha256": { "type": "string" },
+        "all_accepted": { "type": "boolean" },
+        "bitwise_fraction": { "type": "number" },
+        "holdouts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "speedup", "ci95", "control_ms", "candidate_ms"],
+            "properties": {
+              "id": { "type": "string" },
+              "speedup": { "type": "number" },
+              "ci95": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+              "control_ms": { "type": "number" },
+              "candidate_ms": { "type": "number" }
+            }
+          }
+        },
+        "note": { "type": "string" },
+        "note_zh": { "type": "string" }
+      }
+    },
+    "crosscheck": {
+      "type": "object",
+      "required": ["constant_tbs", "shapes"],
+      "properties": {
+        "constant_tbs": { "type": "number" },
+        "shapes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "bitwise_fraction", "speedup", "control_tbs"],
+            "properties": {
+              "id": { "type": "string" },
+              "bitwise_fraction": { "type": "number" },
+              "speedup": { "type": "number" },
+              "control_tbs": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "dispatch": {
+      "type": "object",
+      "required": ["shapes"],
+      "properties": {
+        "shapes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "role", "shipped_ms", "triton_ms", "cuda_ms", "shipped_vs_cuda", "ci95", "shipped_vs_triton", "triton_vs_cuda", "bitwise"],
+            "properties": {
+              "id": { "type": "string" },
+              "role": { "type": "string" },
+              "shipped_ms": { "type": "number" },
+              "triton_ms": { "type": "number" },
+              "cuda_ms": { "type": "number" },
+              "shipped_vs_cuda": { "type": "number" },
+              "ci95": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+              "shipped_vs_triton": { "type": "number" },
+              "triton_vs_cuda": { "type": "number" },
+              "bitwise": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "e2e": {
+      "type": "object",
+      "required": ["status", "model", "device", "method", "correctness", "workloads", "operator_speedup"],
+      "properties": {
+        "status": { "enum": ["measured", "pending"] },
+        "model": { "type": "string" },
+        "device": { "type": "string" },
+        "method": { "type": "string" },
+        "correctness": {
+          "type": "object",
+          "required": ["logits_bitwise_equal", "max_abs_diff", "positions"],
+          "properties": {
+            "logits_bitwise_equal": { "type": "boolean" },
+            "max_abs_diff": { "type": "number" },
+            "positions": { "type": "integer" }
+          }
+        },
+        "workloads": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "strided_ms", "triton", "cuda"],
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "strided_ms": { "type": "number" },
+              "triton": {
+                "type": "object",
+                "required": ["fused_ms", "speedup", "ci95"],
+                "properties": {
+                  "fused_ms": { "type": "number" },
+                  "speedup": { "type": "number" },
+                  "ci95": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+                }
+              },
+              "cuda": {
+                "type": "object",
+                "required": ["fused_ms", "speedup", "ci95"],
+                "properties": {
+                  "fused_ms": { "type": "number" },
+                  "speedup": { "type": "number" },
+                  "ci95": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+                }
+              }
+            }
+          }
+        },
+        "operator_speedup": {
+          "type": "object",
+          "required": ["triton", "cuda"],
+          "properties": { "triton": { "type": "number" }, "cuda": { "type": "number" } }
+        }
+      }
+    },
+    "p3": {
+      "type": "object",
+      "required": ["status", "policy_sha256", "operators", "note"],
+      "properties": {
+        "status": { "enum": ["measured", "pending"] },
+        "policy_sha256": { "type": "string" },
+        "operators": { "type": "array", "items": { "type": "string" } },
+        "note": { "type": "string" },
+        "note_zh": { "type": "string" }
+      }
+    },
+    "caveats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["en"],
+        "properties": { "en": { "type": "string" }, "zh": { "type": "string" } }
+      }
+    }
+  }
+}

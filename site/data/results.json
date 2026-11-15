@@ -1,0 +1,193 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-11-15T15:42:00+08:00",
+  "repo": {
+    "owner": "SanyHe",
+    "name": "headroom-gate-kernel-rsi",
+    "url": "https://github.com/SanyHe/headroom-gate-kernel-rsi",
+    "site": "https://sanyhe.github.io/headroom-gate-kernel-rsi/",
+    "license": "Apache-2.0"
+  },
+  "summary": {
+    "cases": 5,
+    "go": 1,
+    "no_go": 4,
+    "inconclusive": 0,
+    "hosts": 2
+  },
+  "cases": [
+    {
+      "id": "swiglu-fusion-b4096-h7168",
+      "verdict": "GO",
+      "upper_point": 4.999,
+      "upper_range": [4.993, 5.004],
+      "reason": "176 MB stream fused to one pass; a same-bytes add takes 0.0531 ms.",
+      "reason_zh": "176 MB 流一次读完；同字节量的 add 只要 0.0531 ms。"
+    },
+    {
+      "id": "attn-decode-longctx",
+      "verdict": "NO-GO",
+      "upper_point": 1.035,
+      "upper_range": [1.022, 1.035],
+      "reason": "128 MiB KV read; a same-bytes sum already costs 0.0614 ms of the 0.0637 ms measured.",
+      "reason_zh": "128 MiB KV 读取；同字节量的 sum 已占掉 0.0637 ms 中的 0.0614 ms。"
+    },
+    {
+      "id": "gemv-m8-bf16",
+      "verdict": "NO-GO",
+      "upper_point": 1.030,
+      "upper_range": [1.022, 1.048],
+      "reason": "200 MiB weight stream; best case is streaming it once, already ~0.0803 ms.",
+      "reason_zh": "200 MiB 权重流；最好情况也只是流一遍，已约 0.0803 ms。"
+    },
+    {
+      "id": "selector-dflash2",
+      "verdict": "NO-GO",
+      "upper_point": 1.005,
+      "upper_range": [1.0048, 1.0051],
+      "reason": "0.11 ms of a 22.68 ms step; capped by time accounting.",
+      "reason_zh": "22.68 ms 的一步里只占 0.11 ms；被时间账本封顶。"
+    },
+    {
+      "id": "verify-fusion-megaspec",
+      "verdict": "NO-GO",
+      "upper_point": 1.003,
+      "upper_range": [1.000, 1.003],
+      "reason": "Avoidable traffic is 0.056 ms of a 17.23 ms step.",
+      "reason_zh": "可省流量在 17.23 ms 的一步里只有 0.056 ms。"
+    }
+  ],
+  "host": {
+    "id": "rtx6000d",
+    "device": "NVIDIA RTX 6000D",
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "triton": "3.7.1",
+    "rules": "protocol/gate_rules.v2.yaml",
+    "hbm_realistic_tbs": 1.613
+  },
+  "host_run": {
+    "case_id": "swiglu-fusion-b4096-h7168-rtx6000d",
+    "verdict": "GO",
+    "predicted": { "point": 2.1515, "min": 2.1474, "max": 2.1545 },
+    "realised": { "speedup": 1.91595, "ci95": [1.8997, 1.9308], "impl": "Triton" },
+    "realised_vs_predicted": 0.89
+  },
+  "sealed": {
+    "status": "post_hoc_freeze",
+    "manifest_sha256": "9595ba34f8f77f8d58a6f2399f1e6803aeb4b618ea31d807e20b3676d8172881",
+    "all_accepted": true,
+    "bitwise_fraction": 1.0,
+    "holdouts": [
+      { "id": "b8192-h7168", "speedup": 1.8759, "ci95": [1.8507, 1.8921], "control_ms": 0.476, "candidate_ms": 0.252 },
+      { "id": "b1024-h7168", "speedup": 1.2988, "ci95": [1.1899, 1.4594], "control_ms": 0.0507, "candidate_ms": 0.0416 },
+      { "id": "b4096-h5120", "speedup": 1.7199, "ci95": [1.6170, 1.8063], "control_ms": 0.1461, "candidate_ms": 0.0842 }
+    ],
+    "note": "The three shapes were pre-registered in case.yaml on 2026-11-14. The manifest was frozen on 2026-11-15, after the candidate already existed, so this is a held-out-shape check, not a blind sealed read.",
+    "note_zh": "三个形状在 2026-11-14 已预注册在 case.yaml 中。manifest 直到 2026-11-15、候选已存在后才冻结，因此这是留出形状复核，不是盲测封存。"
+  },
+  "crosscheck": {
+    "constant_tbs": 1.613,
+    "shapes": [
+      { "id": "4096x7168", "bitwise_fraction": 1.0, "speedup": 1.9281, "control_tbs": 0.7554 },
+      { "id": "4096x12288", "bitwise_fraction": 1.0, "speedup": 1.9166, "control_tbs": 0.7446 },
+      { "id": "8192x7168", "bitwise_fraction": 1.0, "speedup": 1.8954, "control_tbs": 0.7404 }
+    ]
+  },
+  "dispatch": {
+    "shapes": [
+      {
+        "id": "b4096 · h7168",
+        "role": "registered shape",
+        "shipped_ms": 0.2323, "triton_ms": 0.1268, "cuda_ms": 0.1100,
+        "shipped_vs_cuda": 2.120, "ci95": [2.101, 2.148],
+        "shipped_vs_triton": 1.832, "triton_vs_cuda": 1.176,
+        "bitwise": true
+      },
+      {
+        "id": "prefill · b4096 · h12288",
+        "role": "model prefill",
+        "shipped_ms": 0.4048, "triton_ms": 0.2165, "cuda_ms": 0.2021,
+        "shipped_vs_cuda": 2.005, "ci95": [1.999, 2.012],
+        "shipped_vs_triton": 1.870, "triton_vs_cuda": 1.071,
+        "bitwise": true
+      },
+      {
+        "id": "decode · b256 · h12288",
+        "role": "batched decode",
+        "shipped_ms": 0.0300, "triton_ms": 0.0325, "cuda_ms": 0.0184,
+        "shipped_vs_cuda": 1.654, "ci95": [1.624, 1.686],
+        "shipped_vs_triton": 0.924, "triton_vs_cuda": 1.773,
+        "bitwise": true
+      },
+      {
+        "id": "decode · b1 · h12288",
+        "role": "single-stream decode",
+        "shipped_ms": 0.0258, "triton_ms": 0.0291, "cuda_ms": 0.0132,
+        "shipped_vs_cuda": 1.936, "ci95": [1.863, 1.999],
+        "shipped_vs_triton": 0.887, "triton_vs_cuda": 2.221,
+        "bitwise": true
+      }
+    ]
+  },
+  "e2e": {
+    "status": "measured",
+    "model": "Qwen3-8B",
+    "device": "NVIDIA RTX 6000D",
+    "method": "One merged gate_up GEMM per MLP; only the activation changes. Cache build is outside every window.",
+    "correctness": { "logits_bitwise_equal": true, "max_abs_diff": 0.0, "positions": 128 },
+    "workloads": [
+      {
+        "id": "prefill_4096", "label": "prefill · 4096 tokens", "strided_ms": 504.6,
+        "triton": { "fused_ms": 503.1, "speedup": 1.0031, "ci95": [1.0018, 1.0044] },
+        "cuda": { "fused_ms": 504.7, "speedup": 0.9999, "ci95": [0.9997, 1.0002] }
+      },
+      {
+        "id": "decode_b1_32", "label": "decode · b=1 · 32 steps", "strided_ms": 591.0,
+        "triton": { "fused_ms": 650.8, "speedup": 0.9563, "ci95": [0.9383, 0.9853] },
+        "cuda": { "fused_ms": 585.4, "speedup": 1.0177, "ci95": [1.0006, 1.0457] }
+      },
+      {
+        "id": "decode_b256_32", "label": "decode · b=256 · 32 steps", "strided_ms": 1097.6,
+        "triton": { "fused_ms": 1095.2, "speedup": 1.0021, "ci95": [1.0018, 1.0024] },
+        "cuda": { "fused_ms": 1096.2, "speedup": 1.0012, "ci95": [1.0010, 1.0014] }
+      }
+    ],
+    "operator_speedup": { "triton": 1.916, "cuda": 2.123 },
+    "boundary": "The model-level result is a boundary condition, not a null result. A 4096-token prefill is launch-bound: CPU enqueue is about 238 ms of the 506 ms step and GPU drain is 269 ms. The activation takes 16.1 ms of GPU time on the shipped path and 7.8 ms fused, yet wall time moves by about 1 ms, and deleting the activation entirely still takes 505–506 ms. The 1.92x operator win converts only when the step is GPU-bound.",
+    "boundary_zh": "模型层结果是一个边界条件，不是空结果。4096 token 的 prefill 是发射受限的：506 ms 的一步里 CPU 入队约占 238 ms，GPU 排空占 269 ms。激活在现有路径上占 16.1 ms GPU 时间，融合后为 7.8 ms，但 wall 只变动约 1 ms；把激活整个删掉也仍需 505–506 ms。算子层 1.92× 的收益，只有在步骤变成 GPU 受限时才会兑现。"
+  },
+  "p3": {
+    "status": "pending",
+    "policy_sha256": "46eb46c1945f8b09b3ba579c2d485a6e042265669672207a0dd9587f8e025fa8",
+    "operators": ["rmsnorm", "softmax", "layernorm", "gemv"],
+    "note": "The policy is frozen; the pool has not been measured, so no low-bit claim is made here.",
+    "note_zh": "策略已冻结；池尚未测量，因此这里不声明任何低比特结论。"
+  },
+  "caveats": [
+    {
+      "en": "One host. The host-local numbers come from a single RTX 6000D with v2 device constants; the archived cases replay on the older H20 measurements.",
+      "zh": "单机。本机数字来自一块 RTX 6000D 和 v2 设备常数；归档案例仍基于较早的 H20 测量。"
+    },
+    {
+      "en": "The sealed set is a post-hoc freeze. Shapes were pre-registered, but the manifest was frozen after the candidate existed.",
+      "zh": "封存集是事后冻结。形状确实预注册过，但 manifest 在候选存在之后才冻结。"
+    },
+    {
+      "en": "The end-to-end run swaps only the MLP activation and merges gate_up. Attention, quantization and sampler kernels are untouched.",
+      "zh": "端到端只替换 MLP 激活并合并 gate_up，注意力、量化和采样内核都未改动。"
+    },
+    {
+      "en": "The model-level result is a boundary condition, not a null result. The 4096-token prefill is launch-bound (CPU enqueue about 238 ms of a 506 ms step); saving 8.3 ms of activation GPU time does not move wall time, and deleting the activation entirely still takes 505–506 ms. Fusion converts only when the step is GPU-bound.",
+      "zh": "模型层结果是边界条件，不是空结果。4096 token 的 prefill 是发射受限的（506 ms 的一步里 CPU 入队约 238 ms）；省下 8.3 ms 激活 GPU 时间不会改变 wall，把激活整个删掉也仍需 505–506 ms。只有步骤变成 GPU 受限时，融合才会兑现。"
+    },
+    {
+      "en": "No multi-GPU or multi-run claim. Every interval is a 95% paired bootstrap on one host and one session.",
+      "zh": "不声明多卡或多轮结论。所有区间都是单机单次会话上的 95% 配对 bootstrap。"
+    },
+    {
+      "en": "P3 is pending. The pool has no accuracy trials yet, so mechanism classes cannot be cited from it.",
+      "zh": "P3 尚未完成。池里还没有精度 trial，因此不能引用任何机制类别结论。"
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "kind": "swiglu_shape_crosscheck",
+  "case_id": "swiglu-fusion-b4096-h7168-rtx6000d",
+  "generated_at": "2026-11-15T15:07:32+08:00",
+  "device": "NVIDIA RTX 6000D",
+  "torch": "2.13.0+cu130",
+  "cuda": "13.0",
+  "triton": "3.7.1",
+  "rules": "protocol/gate_rules.v2.yaml",
+  "hbm_realistic_tbs": 1.613,
+  "shapes": [
+    {
+      "shape": {
+        "batch_tokens": 4096,
+        "hidden": 7168
+      },
+      "traffic_mb": 168.0,
+      "bitwise_equal": 29360128,
+      "elements": 29360128,
+      "control_median_ms": 0.23321600258350372,
+      "candidate_median_ms": 0.12113599851727486,
+      "paired_speedup": {
+        "n": 20,
+        "mean_diff": 1.928113,
+        "ci95": [
+          1.911945,
+          1.943628
+        ],
+        "excludes_zero": true,
+        "method": "paired_ratio_bootstrap",
+        "resamples": 20000
+      },
+      "control_tbs": 0.7553545470659762,
+      "candidate_tbs": 1.4542396162679767,
+      "same_bytes_stream_tbs": 1.6489513044806599,
+      "same_bytes_stream_median_ms": 0.10683200135827065,
+      "stream_over_constant": 1.022288471469721,
+      "candidate_over_stream": 0.8819178664138855
+    },
+    {
+      "shape": {
+        "batch_tokens": 4096,
+        "hidden": 12288
+      },
+      "traffic_mb": 288.0,
+      "bitwise_equal": 50331648,
+      "elements": 50331648,
+      "control_median_ms": 0.4055519998073578,
+      "candidate_median_ms": 0.21195200085639954,
+      "paired_speedup": {
+        "n": 20,
+        "mean_diff": 1.916615,
+        "ci95": [
+          1.908668,
+          1.924767
+        ],
+        "excludes_zero": true,
+        "method": "paired_ratio_bootstrap",
+        "resamples": 20000
+      },
+      "control_tbs": 0.7446391292447058,
+      "candidate_tbs": 1.424803194967725,
+      "same_bytes_stream_tbs": 1.505973644914138,
+      "same_bytes_stream_median_ms": 0.20052800327539444,
+      "stream_over_constant": 0.9336476409883063,
+      "candidate_over_stream": 0.9461010156316241
+    },
+    {
+      "shape": {
+        "batch_tokens": 8192,
+        "hidden": 7168
+      },
+      "traffic_mb": 336.0,
+      "bitwise_equal": 58720256,
+      "elements": 58720256,
+      "control_median_ms": 0.4758719950914383,
+      "candidate_median_ms": 0.2510400116443634,
+      "paired_speedup": {
+        "n": 20,
+        "mean_diff": 1.895449,
+        "ci95": [
+          1.887968,
+          1.9027
+        ],
+        "excludes_zero": true,
+        "method": "paired_ratio_bootstrap",
+        "resamples": 20000
+      },
+      "control_tbs": 0.7403703929505282,
+      "candidate_tbs": 1.403447736049014,
+      "same_bytes_stream_tbs": 1.4844341580354798,
+      "same_bytes_stream_median_ms": 0.23734399676322937,
+      "stream_over_constant": 0.9202939603443768,
+      "candidate_over_stream": 0.9454429005503051
+    }
+  ],
+  "device_facts_before": {
+    "rows": [
+      "0, NVIDIA RTX 6000D, 595.104.02, 180, 12481, 33, 36.72, 725"
+    ]
+  }
+}

@@ -9,7 +9,7 @@ pre-registered cases — one GO, four NO-GO — replay to their archived verdict
 a laptop, with no GPU, because the gate is pure arithmetic over recorded
 measurements.
 
-**English** · [简体中文](./README.zh-CN.md)
+**English** · [简体中文](./README.zh-CN.md) · [Results board](https://sanyhe.github.io/headroom-gate-kernel-rsi/)
 
 ## The gate in one screen
 
@@ -58,7 +58,8 @@ Requirements: Python 3.10+, `PyYAML`, `pytest`. Nothing else.
 - **P1 — ratchet.** No realised speedup may exceed the predicted upper bound.
   Checked mechanically over `ledger.jsonl`.
 - **P2 — disjointness.** Evaluation operators never appear in measured cases.
-  Enforced by construction when the GPU scripts land.
+  Enforced by construction; the sealed runner has landed and ran on the second
+  host, with a post-hoc freeze noted in 03.
 - **Provable scope.** `out_of_scope_checks` (precision, model, acceptance,
   output distribution) invalidate a case rather than being argued about.
 - **Reproducible identity.** Every verdict embeds the sha256 of
@@ -81,9 +82,13 @@ Implemented and verified locally (no GPU):
 | Frozen P3 policy + selection | `p3/policy.md`, `p3/select.py` |
 | 71 CPU tests | `tests/` |
 
-Pending a GPU host (tracked as `blocked`, not faked): baseline/candidate timing
-scripts, Triton kernel + CUDA extension, sealed holdout runner, dispatch
-microbenchmark, Qwen3-8B end-to-end capture, and the P3 pool measurement.
+Measured on a second host (RTX 6000D, v2 constants): the operator reaches 1.92×
+(Triton) and 2.12× (CUDA) with bit-identical output, the held-out shapes hold at
+1.88× / 1.30× / 1.72×, and the P1 ratchet is intact. At model level the same
+fusion is 1.00×: a 4096-token prefill is launch-bound, so 8.3 ms of saved
+activation GPU time does not move the 506 ms step. That is the published boundary
+condition — see [03 — Evaluation](./docs/en/03-eval.md#6-second-host-a-boundary-condition-result).
+Still pending: the P3 low-bit pool measurement (policy frozen, pool unmeasured).
 
 Because of that split, the five archived verdicts are replayed from the recorded
 `measured_ms` in `case.yaml`, not re-measured. Every sample used is embedded in
@@ -110,8 +115,8 @@ private/                   harness state (gitignored)
 - [01 — The gate](./docs/en/01-gate.md): ledger, floor, caps, band, verdicts.
 - [02 — Measurement](./docs/en/02-measurement.md): timing protocol and the
   detached-run contract.
-- [03 — Evaluation](./docs/en/03-eval.md): P1/P2, the five replays, and the
-  one honest deviation in this repo.
+- [03 — Evaluation](./docs/en/03-eval.md): P1/P2, the five replays, the second
+  host's boundary condition, and the one honest deviation in this repo.
 - [04 — P3](./docs/en/04-p3.md): pre-registered selection and the joint-impact rule.
 
 ## License

@@ -1,0 +1,169 @@
+{
+  "kind": "qwen3_8b_e2e_reanalysis",
+  "source": "cases-rtx/swiglu-fusion-b4096-h7168-rtx6000d/candidate/evidence/e2e_triton_20261115T152455.json",
+  "generated_at": "2026-11-15T15:28:13+08:00",
+  "fused_impl": "triton",
+  "device": "NVIDIA RTX 6000D",
+  "workloads": {
+    "prefill_4096": {
+      "full": {
+        "n": 10,
+        "mean_ratio": 1.0031244954950655,
+        "mean_ci95": [
+          1.0018480754596457,
+          1.0043533223030283
+        ],
+        "median_ratio": 1.0033631482170073,
+        "median_ci95": [
+          1.0013748775024018,
+          1.0046304669338297
+        ],
+        "per_slot": [
+          1.0021,
+          1.0049,
+          1.0,
+          0.9997,
+          1.0038,
+          1.0046,
+          1.0027,
+          1.0066,
+          1.0031,
+          1.0037
+        ],
+        "excluding_first_touch": false
+      },
+      "drop_first": {
+        "n": 9,
+        "mean_ratio": 1.0032335903967373,
+        "mean_ci95": [
+          1.0018258324621516,
+          1.0045525014982497
+        ],
+        "median_ratio": 1.0036508723103705,
+        "median_ci95": [
+          1.0000456550207462,
+          1.0049492876198176
+        ],
+        "per_slot": [
+          1.0049,
+          1.0,
+          0.9997,
+          1.0038,
+          1.0046,
+          1.0027,
+          1.0066,
+          1.0031,
+          1.0037
+        ],
+        "excluding_first_touch": true
+      }
+    },
+    "decode_b1_32": {
+      "full": {
+        "n": 10,
+        "mean_ratio": 0.9563440842273551,
+        "mean_ci95": [
+          0.9383044670637619,
+          0.9852982480140859
+        ],
+        "median_ratio": 0.9449062687706367,
+        "median_ci95": [
+          0.9327655066639695,
+          0.9566577120961759
+        ],
+        "per_slot": [
+          1.0755,
+          0.9438,
+          0.951,
+          0.9287,
+          0.9317,
+          0.9529,
+          0.9461,
+          0.9328,
+          0.9624,
+          0.9388
+        ],
+        "excluding_first_touch": false
+      },
+      "drop_first": {
+        "n": 9,
+        "mean_ratio": 0.943109161835152,
+        "mean_ci95": [
+          0.9363765512599911,
+          0.9501480455207475
+        ],
+        "median_ratio": 0.9437505262388189,
+        "median_ci95": [
+          0.9317196099461713,
+          0.9528735377033897
+        ],
+        "per_slot": [
+          0.9438,
+          0.951,
+          0.9287,
+          0.9317,
+          0.9529,
+          0.9461,
+          0.9328,
+          0.9624,
+          0.9388
+        ],
+        "excluding_first_touch": true
+      }
+    },
+    "decode_b256_32": {
+      "full": {
+        "n": 10,
+        "mean_ratio": 1.002097915953507,
+        "mean_ci95": [
+          1.0017966011262494,
+          1.0023698400700956
+        ],
+        "median_ratio": 1.0022149873179576,
+        "median_ci95": [
+          1.0017755291531654,
+          1.0024114019960284
+        ],
+        "per_slot": [
+          1.0018,
+          1.0028,
+          1.0011,
+          1.0025,
+          1.0023,
+          1.0022,
+          1.0023,
+          1.0016,
+          1.0021,
+          1.0023
+        ],
+        "excluding_first_touch": false
+      },
+      "drop_first": {
+        "n": 9,
+        "mean_ratio": 1.0021337367091006,
+        "mean_ci95": [
+          1.0017980579833783,
+          1.0024188757490753
+        ],
+        "median_ratio": 1.0022751435467425,
+        "median_ci95": [
+          1.0016469576243519,
+          1.0025099092528391
+        ],
+        "per_slot": [
+          1.0028,
+          1.0011,
+          1.0025,
+          1.0023,
+          1.0022,
+          1.0023,
+          1.0016,
+          1.0021,
+          1.0023
+        ],
+        "excluding_first_touch": true
+      }
+    }
+  },
+  "note": "mean_ratio is the measurement estimator; median_ratio and the drop-first variant are sensitivity checks only and must be reported next to it, never used to re-pick a direction."
+}

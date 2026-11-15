@@ -1,0 +1,33 @@
+{
+  "case_id": "swiglu-fusion-b4096-h7168-rtx6000d",
+  "declared_in": "cases/swiglu-fusion-b4096-h7168/case.yaml#measurement_plan.sealed_holdout",
+  "note": "The holdout shapes were pre-registered in case.yaml on 2026-11-14, before any candidate existed. This manifest was frozen on 2026-11-15, after the Triton candidate had already been measured on the RTX 6000D host. It is therefore a post-hoc freeze: the shapes are held out, but the result is reported as a held-out-shape check, not as a blind sealed evaluation. The manifest records configuration only; it contains no measurement results.",
+  "frozen_at": "2026-11-15",
+  "frozen_after_candidate": true,
+  "frozen_after_candidate_evidence": "cases-rtx/swiglu-fusion-b4096-h7168-rtx6000d/evidence/candidate_20261115T144154.json",
+  "dtype": "bf16",
+  "seed": 0,
+  "hidden": 7168,
+  "holdouts": [
+    {"id": "b8192-h7168", "batch_tokens": 8192, "hidden": 7168},
+    {"id": "b1024-h7168", "batch_tokens": 1024, "hidden": 7168},
+    {"id": "b4096-h5120", "batch_tokens": 4096, "hidden": 5120}
+  ],
+  "candidate": {"kernel": "silu_and_mul", "block": 1024, "num_warps": 4, "round_silu": true},
+  "control": "F.silu(x[:, :H]) * x[:, H:] on the same [B, 2H] buffer",
+  "protocol": {
+    "pairs": 20,
+    "warmup": 10,
+    "l2_flush_bytes": 268435456,
+    "l2_flush_mode": "read",
+    "order": "alternating (A,B) on even pairs, (B,A) on odd pairs",
+    "window": "CUDA events around one launch, after a flush and a sync",
+    "statistic": "paired percentile bootstrap of the per-pair ratio, 20000 resamples, seed 0",
+    "clock_ramp_s": 3.0
+  },
+  "acceptance": {
+    "correctness": "bitwise identical to the control",
+    "speedup_ci_must_exclude": 1.0,
+    "evaluations_allowed": 1
+  }
+}

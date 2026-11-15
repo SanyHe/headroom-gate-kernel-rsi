@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Headroom Gate — price the ceiling before writing the kernel</title>
+<meta name="description" content="A pre-registered gate for GPU kernel work: compulsory bytes, a measured floor, a predicted upper bound, and one held-out run. Five archived cases, one GO.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="topline">
+      <span class="brand">headroom-gate-kernel-rsi</span>
+      <nav class="nav" aria-label="Primary">
+        <a href="https://github.com/SanyHe/headroom-gate-kernel-rsi" data-i18n="nav.repo">Repository</a>
+        <a id="spec-link" href="https://github.com/SanyHe/headroom-gate-kernel-rsi/blob/main/docs/en/01-gate.md" data-i18n="nav.spec">Gate spec</a>
+        <button id="lang" class="lang" type="button" aria-label="Switch language">中文</button>
+      </nav>
+    </div>
+    <p class="eyebrow" data-i18n="hero.eyebrow">Kernel research · pre-registered · replayable</p>
+    <h1 data-i18n="hero.title">Price the ceiling before you write the kernel.</h1>
+    <p class="lead" data-i18n="hero.lead">Most kernel write-ups never state a ceiling, so any gain looks like progress. This project makes the ceiling an input: compulsory bytes, a measured floor, a predicted upper bound. Five archived cases replay offline — four of them say no.</p>
+    <div class="statstrip" id="statstrip" aria-live="polite"></div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+
+  <section class="section" id="gate">
+    <div class="section-head">
+      <span class="num">01</span>
+      <h2 data-i18n="gate.title">The gate</h2>
+    </div>
+    <div class="grid3">
+      <article class="card">
+        <h3 data-i18n="gate.bytes.title">Bytes</h3>
+        <p data-i18n="gate.bytes.body">Sum the compulsory traffic: weights, activations, output. It cannot be argued down. A mechanism can only remove what it touches.</p>
+      </article>
+      <article class="card">
+        <h3 data-i18n="gate.floor.title">Floor</h3>
+        <p data-i18n="gate.floor.body">max(bytes / BW_eff, flops / FLOP_eff), both measured. A same-bytes reference kernel can raise the floor and can never lower it.</p>
+        <p class="formula">max( B / 1.613 TB/s , F / 138 TFLOPS )</p>
+      </article>
+      <article class="card">
+        <h3 data-i18n="gate.verdict.title">Verdict</h3>
+        <p data-i18n="gate.verdict.body">GO only if the conservative end of the band clears 1.30×. Below 1.15× is NO-GO. In between is INCONCLUSIVE — an honest answer, not a failure.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="cases">
+    <div class="section-head">
+      <span class="num">02</span>
+      <h2 data-i18n="cases.title">Five cases, one GO</h2>
+    </div>
+    <p class="section-lead" data-i18n="cases.lead">Each verdict is arithmetic over recorded samples, so the whole board replays on a laptop with no GPU. The point is not the one win; it is how cheaply the other four ideas die.</p>
+    <div class="tablewrap">
+      <table class="table" id="case-table">
+        <thead>
+          <tr>
+            <th data-i18n="cases.th.case">Case</th>
+            <th data-i18n="cases.th.verdict">Verdict</th>
+            <th data-i18n="cases.th.upper">Predicted ceiling</th>
+            <th data-i18n="cases.th.why">Why</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section" id="host">
+    <div class="section-head">
+      <span class="num">03</span>
+      <h2 data-i18n="host.title">On the host: predicted vs realised</h2>
+    </div>
+    <p class="section-lead" data-i18n="host.lead">The archived case was re-registered on a different GPU with v2 device constants, then measured. The candidate was written only after the ceiling was fixed.</p>
+    <div class="kpis" id="host-kpis"></div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3 data-i18n="sealed.title">Held-out shapes</h3>
+        <span class="tag tag-warn" data-i18n="sealed.tag">post-hoc freeze</span>
+      </div>
+      <p class="panel-note" data-i18n="sealed.lead">Speedup over a same-bytes control, 95% paired bootstrap. All three shapes are bit-identical to the control.</p>
+      <div id="sealed-chart" class="chart"></div>
+      <p class="caveat" id="sealed-note"></p>
+    </div>
+    <p class="footnote" id="crosscheck"></p>
+  </section>
+
+  <section class="section" id="dispatch">
+    <div class="section-head">
+      <span class="num">04</span>
+      <h2 data-i18n="dispatch.title">Three ways to move the same bytes</h2>
+    </div>
+    <p class="section-lead" data-i18n="dispatch.lead">Shipped PyTorch path, a Triton kernel, and a compiled CUDA op. Every arm is bit-identical to the shipped output; only the time differs.</p>
+    <div id="dispatch-chart" class="chart chart-tall"></div>
+    <div class="tablewrap">
+      <table class="table" id="dispatch-table">
+        <thead>
+          <tr>
+            <th data-i18n="dispatch.th.shape">Shape</th>
+            <th>shipped</th>
+            <th>Triton</th>
+            <th>CUDA</th>
+            <th data-i18n="dispatch.th.gain">shipped → CUDA</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="footnote" data-i18n="dispatch.note">Triton trails the compiled op at every shape. At b=1 it is 2.2× slower than the CUDA arm — the signature of launch overhead, not bandwidth.</p>
+  </section>
+
+  <section class="section" id="e2e">
+    <div class="section-head">
+      <span class="num">05</span>
+      <h2 data-i18n="e2e.title">What survives to the model</h2>
+    </div>
+    <div class="headline" id="e2e-headline"></div>
+    <p class="section-lead" id="e2e-method"></p>
+    <div id="e2e-chart" class="chart chart-tall"></div>
+    <div class="tablewrap">
+      <table class="table" id="e2e-table">
+        <thead>
+          <tr>
+            <th data-i18n="e2e.th.workload">Workload</th>
+            <th>shipped</th>
+            <th>Triton</th>
+            <th>CUDA</th>
+            <th data-i18n="e2e.th.correct">Logits</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="footnote" id="e2e-boundary"></p>
+  </section>
+
+  <section class="section" id="p3">
+    <div class="section-head">
+      <span class="num">06</span>
+      <h2 data-i18n="p3.title">Low-bit pool</h2>
+    </div>
+    <div class="panel panel-pending" id="p3-panel"></div>
+  </section>
+
+  <section class="section" id="limits">
+    <div class="section-head">
+      <span class="num">07</span>
+      <h2 data-i18n="limits.title">What this does not show</h2>
+    </div>
+    <ol class="limits" id="limits-list"></ol>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footwrap">
+    <span>Apache-2.0 · <a href="https://github.com/SanyHe/headroom-gate-kernel-rsi">SanyHe/headroom-gate-kernel-rsi</a></span>
+    <span id="generated"></span>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

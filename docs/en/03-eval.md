@@ -13,8 +13,10 @@ never the other way round.
 **P2 — disjointness (structural).** Evaluation operators never appear in measured
 cases. The evaluation set lives in a sealed list outside
 `protocol/gate_rules.yaml`; `sealed_eval.py` runs only that list, and `cases/` may
-not contain the same operator. The GPU evaluation scripts are not landed yet, so
-P2 is currently declared, not executed.
+not contain the same operator. The GPU evaluation scripts have since landed and
+ran on the RTX 6000D host. Their manifest was frozen after the candidate already
+existed, so that run is a held-out-shape check, not a blind sealed read; see
+section 6.
 
 ## 2. Local replay of the five archived cases
 
@@ -85,3 +87,54 @@ the samples in `case.yaml`, which came from the H20 host; every sample used is
 embedded in the case file and the original raw archive is private, not
 redistributed. Re-deriving samples requires landing the `blocked` GPU scripts and
 following [02 — Measurement](./02-measurement.md).
+
+## 6. Second host: a boundary-condition result
+
+The GO case was re-registered on an RTX 6000D under `protocol/gate_rules.v2.yaml`
+(`hbm_realistic_tbs = 1.613`) and then measured end to end. Every number below
+comes from that device; each run is recorded as its own artifact under
+`cases-rtx/swiglu-fusion-b4096-h7168-rtx6000d/`.
+
+| Stage | Result |
+|---|---|
+| Gate (P1) | predicted 2.1515× (2.1474–2.1545), realised 1.91595× (1.8997–1.9308), ratio 0.89 |
+| Held-out shapes | 1.876× (b8192-h7168), 1.299× (b1024-h7168), 1.720× (b4096-h5120); all bit-identical |
+| Constant cross-check | 1.928× / 1.917× / 1.895× at 4096×7168, 4096×12288, 8192×7168; control 0.74–0.76 TB/s |
+| Dispatch | shipped → CUDA 2.120× / 2.005× / 1.654× / 1.936× on four shapes; all arms bit-identical |
+| Model prefill, 4096 tokens | Triton 1.0031×, CUDA 0.9999×; 128 logits bit-identical |
+| Model decode, b=1, 32 steps | Triton 0.9563×, CUDA 1.0177× |
+| Model decode, b=256, 32 steps | Triton 1.0021×, CUDA 1.0012× |
+
+The operator win is real and reproducible. It does not become a model win, and
+the measurement says why: the prefill step is launch-bound, not
+bandwidth-bound.
+
+| Quantity per 4096-token prefill | Shipped path | Fused (CUDA) |
+|---|---|---|
+| Activation GPU time (36 MLPs) | 16.1 ms | 7.8 ms |
+| CPU enqueue | 239 ms | 237 ms |
+| GPU drain | 267 ms | 269 ms |
+| Wall | 506 ms | 506 ms |
+
+An ablation that removes the activation entirely still runs at 505–506 ms. A
+CPU-only profile puts 227 ms of the step in `aten::rsqrt`, `aten::pow` and
+`aten::mean` from the unfused RMSNorm. Saving 8.3 ms of GPU time cannot shorten a
+step whose critical path is CPU enqueue. The isolated benchmark still shows 1.99×
+cold and 1.86× warm for the same op, so the negative model-level result is not a
+measurement artefact.
+
+**The published claim is therefore a boundary condition:** a fused
+`silu_and_mul` pays off when the surrounding step is GPU-bound; it does not
+retrofit a launch-bound model. The operator-level ceiling stands, and the
+model-level speedup is reported as about 1.00×.
+
+Two deviations belong next to this result:
+
+- The sealed manifest was frozen after the candidate existed
+  (`frozen_after_candidate: true`): held-out shapes, not a blind sealed read.
+- The third dispatch arm is vLLM's prebuilt `torch.ops._C.silu_and_mul`, because
+  the host had no `nvcc`. It is a real compiled op, but not one this repo built.
+
+P3 is deferred: the frozen policy exists, but the pool has not been measured, so
+no low-bit claim is made.
+
