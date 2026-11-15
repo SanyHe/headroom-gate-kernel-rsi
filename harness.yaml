@@ -1,0 +1,60 @@
+# harness.yaml — Centralized guardrails for the headroom-gate-kernel-rsi repo.
+# This is the single structured source for operating boundaries and role config.
+# AGENTS.md references the rules here; keep both in sync.
+
+project:
+  name: headroom-gate-kernel-rsi
+  description: >
+    A falsifiable gate for GPU kernel work: price the ceiling before optimizing,
+    then let one held-out measurement decide. Ships five pre-registered cases
+    that replay to their archived verdicts without a GPU.
+  phases: [P0_gate, P1_kernel, P2_sealed, P3_sweep]
+  strict_order: true
+
+guardrails:
+  evidence_required_for_passing: true
+  single_in_progress: true
+  no_secrets_in_repo: true
+  # Kernel work and every timing run happen on the GPU host, never locally.
+  gpu_runs_on_cloud_only: true
+  gpu_type: "NVIDIA H20 96GB"
+  comments_language: en
+  # protocol/gate_rules.yaml is hash-frozen; a verdict cites its sha256.
+  rules_are_frozen_by_hash: true
+  # A floor may only be raised by evidence, never lowered to make a case pass.
+  floors_may_only_raise: true
+  # No post-hoc edits to a pre-registered case.yaml; append a verdict instead.
+  cases_are_append_only: true
+
+verification:
+  standard_command: "python3 -m pytest tests/ -q"
+  gate_command: "python3 -m gate.cli --all"
+  ledger_command: "python3 -m gate.cli --verify-ledger"
+  must_pass_before_feature_done: true
+
+paths:
+  agents_md: AGENTS.md
+  # Harness state files live in private/ (gitignored, never published).
+  feature_list: private/feature_list.json
+  progress: private/trae-progress.md
+  plan: private/PLAN.md
+  spec: private/REPRODUCE.md
+  rules: protocol/gate_rules.yaml
+  gate: gate/decide.py
+  byte_model: gate/byte_model.py
+  bootstrap: stats/bootstrap.py
+  ledger: ledger.jsonl
+  cases: cases/
+  p3_policy: p3/policy.md
+  p3_select: p3/select.py
+  run_scripts: scripts/
+
+roles:
+  planner:
+    description: "Reads private/PLAN.md + private/feature_list.json, picks the next feature, writes a short plan before coding."
+  developer:
+    description: "Implements one feature at a time, runs the CPU suite, records evidence."
+  reviewer:
+    description: "Checks that every number in a verdict is reproducible and that no case.yaml was edited after pre-registration."
+
+status_enum: [not_started, in_progress, blocked, passing]

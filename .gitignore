@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Local, never published
+private/
+.DS_Store
+.screenshots/
+.vscode/
+.trae/
+
+# Ephemeral run directories (status, logs, pid files). Committed evidence goes
+# under evidence/ or cases/<id>/evidence/, not here.
+evidence/runs/
+*.tmp

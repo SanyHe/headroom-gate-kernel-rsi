@@ -1,0 +1,96 @@
+id: gemv-m8-bf16
+title: Rewrite the M=8 BF16 decode GEMV as a bandwidth-shaped streaming kernel
+status: inconclusive
+date: 2026-11-14
+rules_sha256: "966715a7dfe9df58e71175719fa3f62226d474e368adc42c177fe7d17416bea2"
+rules_version: "1.1.0"
+re_pinned_note: >
+  Re-gated under rules 1.1.0 on 2026-11-14. The v1.0.0 verdict (INCONCLUSIVE,
+  upper bound [1.289, 1.322]x) stays in ledger.jsonl as history. 1.1.0
+  additionally requires a same-bytes reference kernel: reading the same 200 MiB
+  takes 0.0803 ms, so the floor rises from the analytic 0.0636 ms to 0.0803 ms
+  and the headroom collapses to ~1.03x.
+
+hypothesis: >
+  At M=8, K=5120, N=20480 a stock BF16 GEMM reaches only 2.42 TB/s of weight
+  streaming (19.3 TFLOPS) because the tiling is shaped for compute-bound M. A
+  GEMV/streaming-specialised kernel that reads each weight once at sustained
+  copy bandwidth moves the same bytes in 0.064 ms instead of 0.087 ms, i.e. a
+  1.37x operator-level speedup with identical numerics.
+
+post_measurement_note: >
+  The hypothesis above is the pre-registration and is left unedited. Under a
+  stricter protocol (L2-read-flush, 20 repeats) the baseline is 0.0827 ms, not
+  0.087 ms, so the predicted upper bound falls from 1.37x to ~1.30x and the case
+  does not clear the 1.30x go line with confidence.
+
+workload:
+  kind: gemm
+  shapes: {m: 8, k: 5120, n: 20480}
+  dtype: bf16
+  concurrency: 1
+  bytes:
+    weights: 209715200        # k*n*2
+    activations: 81920        # m*k*2
+    output: 327680            # m*n*2
+  flops: 1677721600
+  measured_ms:
+    - 0.08521600067615509
+    - 0.08224000036716461
+    - 0.08204799890518188
+    - 0.08633600175380707
+    - 0.0843840017914772
+    - 0.0806720033288002
+    - 0.08111999928951263
+    - 0.08256000280380249
+    - 0.08483199775218964
+    - 0.08284799754619598
+    - 0.08060800284147263
+    - 0.09996800124645233
+    - 0.08185599744319916
+    - 0.08419200032949448
+    - 0.08303999900817871
+    - 0.08243200182914734
+    - 0.0809599980711937
+    - 0.08102399855852127
+    - 0.08367999643087387
+    - 0.08428800106048584
+  measurement_source: "cases/gemv-m8-bf16/evidence/baseline_20261114T075155.json"
+  empirical_floor_ms: 0.080317
+  empirical_floor_source: "cases/gemv-m8-bf16/evidence/ceiling_20261114T083756.json#empirical_floor_ms"
+  noise_cv: 0.0497
+
+mechanism:
+  name: single-pass streaming GEMV (weights read once, no compute-shaped tile)
+  class: tiling
+  removable_bytes: 209715200
+  removable_flops: 0
+  addressable_share_claim: 1.0
+  justification: >
+    The measured kernel re-streams the weight matrix with a tiling chosen for
+    compute-bound shapes; the addressed traffic is the full weight stream, whose
+    one-pass streaming time at 3.30 TB/s is the floor and therefore the hard cap
+    on any claim. Exact numerics: only the accumulation order may change.
+
+measurement_plan:
+  baseline: "torch.matmul(a[8,5120], b[5120,20480]) bf16, CUDA graphs irrelevant at op level"
+  candidate: "single-kernel streaming GEMV over the same b, same a, same dtype"
+  repeats: 10
+  warmup: 5
+  window: "CUDA-event timing around one launch, L2 flushed between repeats"
+  clocks: recorded-only
+  sealed_holdout:
+    - {m: 4, k: 5120, n: 20480}
+    - {m: 16, k: 5120, n: 17408}
+    - {m: 8, k: 5120, n: 4096}
+
+stop_conditions:
+  gpu_budget_hours: 1.0
+  wall_clock_hours: 6.0
+  max_trials: 20
+
+out_of_scope_checks:
+  changes_precision: false
+  changes_model: false
+  changes_acceptance: false
+  changes_output_distribution: false

@@ -1,0 +1,106 @@
+{
+  "kind": "hgk_gate_verdict",
+  "schema_version": "1.0.0",
+  "case_id": "gemv-m8-bf16",
+  "title": "Rewrite the M=8 BF16 decode GEMV as a bandwidth-shaped streaming kernel",
+  "verdict": "NO-GO",
+  "reasons": [
+    "veto: most favourable defensible speedup 1.0482x < veto line 1.15x",
+    "floor raised from analytic 0.0637 ms to 0.0803 ms by the same-bytes reference"
+  ],
+  "rules_version": "1.1.0",
+  "rules_sha256": "966715a7dfe9df58e71175719fa3f62226d474e368adc42c177fe7d17416bea2",
+  "hypothesis": "At M=8, K=5120, N=20480 a stock BF16 GEMM reaches only 2.42 TB/s of weight streaming (19.3 TFLOPS) because the tiling is shaped for compute-bound M. A GEMV/streaming-specialised kernel that reads each weight once at sustained copy bandwidth moves the same bytes in 0.064 ms instead of 0.087 ms, i.e. a 1.37x operator-level speedup with identical numerics.\n",
+  "mechanism": {
+    "name": "single-pass streaming GEMV (weights read once, no compute-shaped tile)",
+    "class": "tiling",
+    "justification": "The measured kernel re-streams the weight matrix with a tiling chosen for compute-bound shapes; the addressed traffic is the full weight stream, whose one-pass streaming time at 3.30 TB/s is the floor and therefore the hard cap on any claim. Exact numerics: only the accumulation order may change.\n"
+  },
+  "checks": {
+    "n_samples": 20,
+    "n_ge_min_repeats_go": true,
+    "cv": 0.049678,
+    "cv_le_max": false,
+    "headroom_fraction_ge_min": true,
+    "empirical_floor_present": true,
+    "floor_source": "empirical",
+    "accounting_caps_claim": false,
+    "out_of_scope_clean": true
+  },
+  "floor": {
+    "bytes_total": 210124800,
+    "flops": 1677721600,
+    "bandwidth_tbs": 3.3,
+    "tflops": 138.0,
+    "t_mem_ms": 0.063674,
+    "t_compute_ms": 0.012157,
+    "t_floor_ms": 0.080317,
+    "regime": "memory",
+    "arithmetic_intensity": 7.984405,
+    "analytic_floor_ms": 0.063674,
+    "empirical_floor_ms": 0.080317,
+    "floor_source": "empirical"
+  },
+  "measurement": {
+    "n": 20,
+    "median_ms": 0.08270400017499924,
+    "lo_ms": 0.08204799890518188,
+    "hi_ms": 0.08419200032949448,
+    "cv": 0.049678,
+    "band_method": "bootstrap",
+    "source": "cases/gemv-m8-bf16/evidence/baseline_20261114T075155.json",
+    "raw_samples_ms": [
+      0.08521600067615509,
+      0.08224000036716461,
+      0.08204799890518188,
+      0.08633600175380707,
+      0.0843840017914772,
+      0.0806720033288002,
+      0.08111999928951263,
+      0.08256000280380249,
+      0.08483199775218964,
+      0.08284799754619598,
+      0.08060800284147263,
+      0.09996800124645233,
+      0.08185599744319916,
+      0.08419200032949448,
+      0.08303999900817871,
+      0.08243200182914734,
+      0.0809599980711937,
+      0.08102399855852127,
+      0.08367999643087387,
+      0.08428800106048584
+    ]
+  },
+  "headroom": {
+    "median_ms": 0.0023870001749992376,
+    "fraction": 0.02886196761883845,
+    "at_fast_end_ms": 0.0017309989051818853,
+    "at_slow_end_ms": 0.003875000329494477
+  },
+  "addressable": {
+    "removable_bytes": 209715200,
+    "byte_cap_ms": 0.0635500606060606,
+    "removable_ms": 0.0,
+    "removable_ms_source": null,
+    "cap_ms": 0.0635500606060606,
+    "claimed_share": 1.0,
+    "claimed_ms_median": 0.0023870001749992376,
+    "applied_ms_median": 0.0023870001749992376,
+    "effective_share_median": 1.0
+  },
+  "prediction": {
+    "speedup_upper_min": 1.0215520861733118,
+    "speedup_upper_point": 1.0297197377267482,
+    "speedup_upper_max": 1.0482463280438075,
+    "best_case_ms_min": 0.080317,
+    "best_case_ms_point": 0.080317,
+    "best_case_ms_max": 0.080317,
+    "interval_method": "bootstrap"
+  },
+  "decision_trace": [
+    "veto: most favourable defensible speedup 1.0482x < veto line 1.15x"
+  ],
+  "generated_at": "2026-11-15T14:04:57+08:00",
+  "case_sha256": "fef7c35d5b03becde8e41ee3d83934b0f99153f56f55b7021afeed6d881a7225"
+}

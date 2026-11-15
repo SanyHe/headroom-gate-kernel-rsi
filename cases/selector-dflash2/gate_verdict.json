@@ -1,0 +1,88 @@
+{
+  "kind": "hgk_gate_verdict",
+  "schema_version": "1.0.0",
+  "case_id": "selector-dflash2",
+  "title": "Replace the DFlash2 candidate-lattice path selector with a fused walk",
+  "verdict": "NO-GO",
+  "reasons": [
+    "veto: most favourable defensible speedup 1.0051x < veto line 1.15x",
+    "measurement band is parametric, n=1, source=private archive p0-2026-11-13#section-3",
+    "claim capped by accounting: claimed 5.8900 ms > allowed 0.1107 ms (bytes 0.0003 / time 0.1107)"
+  ],
+  "rules_version": "1.1.0",
+  "rules_sha256": "966715a7dfe9df58e71175719fa3f62226d474e368adc42c177fe7d17416bea2",
+  "hypothesis": "The selector reads as a hot spot in the draft path, so fusing hidden projection + edge scoring + path walk into one kernel yields a measurable end-to-end gain on the c1 short-context decode cycle.\n",
+  "mechanism": {
+    "name": "fuse hidden projection + edge scoring + path walk into one selector kernel",
+    "class": "fusion",
+    "justification": "The selector is latency-bound, not byte-bound: its entire unfused cost is 110.7 us/step (hidden proj 14.1 + scoring 82.0 + walk 14.6), so even deleting it completely can only save 0.11 ms of a 22.68 ms cycle. The byte ledger caps the claim at 0.0003 ms, far below the time accounting, so the time accounting binds - and it is 0.49 % of the cycle.\n"
+  },
+  "checks": {
+    "n_samples": 1,
+    "n_ge_min_repeats_go": false,
+    "cv": null,
+    "cv_le_max": true,
+    "headroom_fraction_ge_min": true,
+    "empirical_floor_present": false,
+    "floor_source": "analytic",
+    "accounting_caps_claim": true,
+    "out_of_scope_clean": true
+  },
+  "floor": {
+    "bytes_total": 55406954728,
+    "flops": 0,
+    "bandwidth_tbs": 3.3,
+    "tflops": 138.0,
+    "t_mem_ms": 16.789986,
+    "t_compute_ms": 0.0,
+    "t_floor_ms": 16.789986,
+    "regime": "memory",
+    "arithmetic_intensity": 0.0,
+    "analytic_floor_ms": null,
+    "empirical_floor_ms": null,
+    "floor_source": "analytic"
+  },
+  "measurement": {
+    "n": 1,
+    "median_ms": 22.68,
+    "lo_ms": 21.95765735326257,
+    "hi_ms": 23.426105605185185,
+    "cv": null,
+    "band_method": "parametric",
+    "source": "private archive p0-2026-11-13#section-3",
+    "raw_samples_ms": [
+      22.68
+    ]
+  },
+  "headroom": {
+    "median_ms": 5.890014000000001,
+    "fraction": 0.2597007936507937,
+    "at_fast_end_ms": 5.16767135326257,
+    "at_slow_end_ms": 6.636119605185186
+  },
+  "addressable": {
+    "removable_bytes": 1048576,
+    "byte_cap_ms": 0.000317750303030303,
+    "removable_ms": 0.110718,
+    "removable_ms_source": "private archive p0-2026-11-13#selector_microbench",
+    "cap_ms": 0.110718,
+    "claimed_share": 1.0,
+    "claimed_ms_median": 5.890014000000001,
+    "applied_ms_median": 0.110718,
+    "effective_share_median": 0.018797578409830602
+  },
+  "prediction": {
+    "speedup_upper_min": 1.0047487093877596,
+    "speedup_upper_point": 1.004905694385847,
+    "speedup_upper_max": 1.0050678952419696,
+    "best_case_ms_min": 21.84693935326257,
+    "best_case_ms_point": 22.569282,
+    "best_case_ms_max": 23.315387605185187,
+    "interval_method": "parametric"
+  },
+  "decision_trace": [
+    "veto: most favourable defensible speedup 1.0051x < veto line 1.15x"
+  ],
+  "generated_at": "2026-11-15T14:04:57+08:00",
+  "case_sha256": "27f70746ccdd1dd5bd3a966f71bc5f58f6b0de7b9ec45def06fe71e9a648611d"
+}
