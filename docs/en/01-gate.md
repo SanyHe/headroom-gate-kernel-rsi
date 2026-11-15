@@ -10,7 +10,7 @@ to the same verdict forever.
 
 | Field | Meaning |
 |---|---|
-| `workload.bytes` | compulsory traffic, split into `weights / activations / output` |
+| `workload.bytes` | the bytes that must move, split into `weights / activations / output` |
 | `workload.flops` | FLOPs actually executed, not the theoretical count |
 | `workload.measured_ms` | every timed sample; medians and bands derive from these |
 | `workload.empirical_floor_ms` | same-bytes reference-kernel time (optional, required for GO) |
@@ -62,8 +62,10 @@ on the fast side (`med / (1 + z·cv)`, not `med·(1 - z·cv)`).
 `speedup(t) = t / (t - applied(t))` rises while headroom-limited and falls once a
 cap binds, so the maximum can sit at the interior kink `floor + cap_ms`, not at
 either endpoint. The gate adds every kink inside the band to the evaluation set.
-The swiglu case is exactly this: endpoint-only evaluation gives ~4.99 and misses
-the real 5.004.
+In the measured case here the kink falls just outside the band (`floor + cap` is
+0.2359 ms against a fast end of 0.2345 ms), so the maximum sits at an endpoint;
+whenever a kink does land inside the band, endpoint-only evaluation would
+understate the bound.
 
 ## 5. Three verdicts
 

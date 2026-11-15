@@ -13,7 +13,7 @@
    Only **one** may be `in_progress`.
 3. Read the spec section for that feature in `private/REPRODUCE.md`, plus
    [`docs/01-gate.md`](./docs/01-gate.md) and [`docs/03-eval.md`](./docs/03-eval.md).
-4. Run `./init.sh`. It replays the archived verdicts and runs the CPU suite. If it
+4. Run `./init.sh`. It replays every recorded verdict and runs the CPU suite. If it
    fails, fix the baseline before anything else.
 
 > `private/` is gitignored and never published. A fresh clone has no harness
@@ -49,7 +49,7 @@
 2. `private/trae-progress.md` has a session record: Goal, Completed, Verification,
    Evidence, Known risks, Next best action.
 3. `python3 -m pytest tests/ -q` passes.
-4. `python3 -m gate.cli --all` replays the archived verdicts unchanged.
+4. `python3 -m gate.cli --all` replays every recorded verdict unchanged.
 5. Nothing half-finished is left unrecorded.
 
 ## 4. Commands & Paths

@@ -13,7 +13,7 @@
       "hero.lead": "Most kernel work only asks “how much faster than before”, never “how much headroom is left against the hardware”. This project flips the order: work out the lowest time the bytes and FLOPs allow (floor), then how much a rewrite could possibly win (ceiling), and only then decide whether it is worth writing. GO if the conservative estimate clears 1.3× — worth building. Under 1.15× is NO-GO. In between is INCONCLUSIVE: an open question, not a failure. One measured case on the AutoDL RTX 6000D replays offline; five pre-registered templates await third-party cloud measurement.",
       "gate.title": "The gate",
       "gate.bytes.title": "Bytes",
-      "gate.bytes.body": "Sum the compulsory traffic: weights, activations, output. It cannot be argued down. A mechanism can only remove what it touches.",
+      "gate.bytes.body": "Sum the bytes that must move: weights, activations, output. This number has no bargaining room. A mechanism can only remove what it actually covers.",
       "gate.floor.title": "Floor",
       "gate.floor.body": "max(bytes / BW_eff, flops / FLOP_eff), both measured. A same-bytes reference kernel can raise the floor and can never lower it.",
       "gate.verdict.title": "Verdict",

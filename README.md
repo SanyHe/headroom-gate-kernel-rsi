@@ -29,8 +29,8 @@ gate cannot do is measure — that happens once, on a cloud GPU, and lands in
 
 ## The gate in one screen
 
-1. **Bytes.** The workload's compulsory traffic (weights + activations + output)
-   is summed. It cannot be argued down.
+1. **Bytes.** The bytes the workload must move (weights + activations + output)
+   are summed. This number has no bargaining room.
 2. **Floor.** `max(bytes / BW_eff, flops / FLOP_eff)` — 1.613 TB/s and 136.8
    TFLOPS on the AutoDL RTX 6000D host, both measured, not spec-sheet, frozen in
    `protocol/gate_rules.yaml`. An optional same-bytes reference kernel raises

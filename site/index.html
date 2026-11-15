@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Headroom Gate — work out the hardware ceiling before writing the kernel</title>
-<meta name="description" content="A pre-registered gate for GPU kernel work: compulsory bytes, a measured floor, a predicted upper bound, and one held-out run. One measured case on RTX 6000D, five pre-registered templates.">
+<meta name="description" content="A pre-registered gate for GPU kernel work: the bytes that must move, a measured floor, a predicted upper bound, and one held-out run. One measured case on RTX 6000D, five pre-registered templates.">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -37,7 +37,7 @@
     <div class="grid3">
       <article class="card">
         <h3 data-i18n="gate.bytes.title">Bytes</h3>
-        <p data-i18n="gate.bytes.body">Sum the compulsory traffic: weights, activations, output. It cannot be argued down. A mechanism can only remove what it touches.</p>
+        <p data-i18n="gate.bytes.body">Sum the bytes that must move: weights, activations, output. This number has no bargaining room. A mechanism can only remove what it actually covers.</p>
       </article>
       <article class="card">
         <h3 data-i18n="gate.floor.title">Floor</h3>
