@@ -6,7 +6,7 @@ Most kernel work only asks "how much faster than before", never "how much
 headroom is left against the hardware". This project flips the order: work out
 the lowest time the bytes and FLOPs allow (floor), then how much a rewrite could
 possibly win (ceiling), and only then decide whether it is worth writing. GO if
-the conservative estimate clears 1.3x — worth building. Under 1.15x is NO-GO. In
+the conservative estimate clears 1.3× — worth building. Under 1.15× is NO-GO. In
 between is INCONCLUSIVE: an open question, not a failure.
 
 One measured case on the AutoDL RTX 6000D replays its archived verdict on a
@@ -40,9 +40,9 @@ gate cannot do is measure — that happens once, on a cloud GPU, and lands in
    A mechanism cannot remove more time than the bytes or the time it touches.
 5. **Band.** A 5–95 % bootstrap over the repeats. Kinks inside the band are
    evaluated explicitly: `speedup(t)` is non-monotonic once a cap binds.
-6. **Verdict.** `GO` needs the conservative end at or above 1.30x, plus a
+6. **Verdict.** `GO` needs the conservative end at or above 1.30×, plus a
    same-bytes floor, at least 5 repeats and CV within 2%. `NO-GO` if even the
-   generous end stays under 1.15x; everything else falls through.
+   generous end stays under 1.15×; everything else falls through.
 
 ```bash
 python3 -m gate.cli --all
