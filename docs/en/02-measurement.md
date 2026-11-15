@@ -72,5 +72,6 @@ The GPU-side scripts are not in this repo yet (`measure_baseline.py`,
 `measure_candidate.py`, `sealed_eval.py`, `kernel.py`, `measure_dispatch.py`,
 `e2e_qwen3_8b.py`, `analyze_e2e.py`, `scripts/compare.py`,
 `p3/measure_pool.py`). They are tracked as `blocked`, not described as done. The
-five archived verdicts are therefore replayed from recorded samples, not
-re-measured here.
+measured verdict is therefore replayed from recorded samples, not
+re-measured here. The five template cases in `cases/` carry no samples and
+produce no verdict until re-measured on third-party cloud hardware.

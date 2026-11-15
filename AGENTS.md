@@ -78,11 +78,14 @@ Key paths:
 
 ## 5. Compute
 
-All timing runs happen on a GPU host. The five archived cases were measured on
-the H20; `swiglu-fusion-b4096-h7168-rtx6000d` was measured on an RTX 6000D under
-`protocol/gate_rules.v2.yaml`. Local work is limited to: the gate, the ledger,
-statistics, case registration, the run-script contract, the P3 selector, tests,
-and docs. Anything that needs `torch.cuda` is `blocked` until a GPU session.
+All timing runs happen on third-party cloud GPU hardware. Published
+measurements come from the AutoDL RTX 6000D host under
+`protocol/gate_rules.yaml` (version 2.0.0). The five cases in `cases/` are
+pre-registered templates with no measurement data; they must be re-measured on
+third-party cloud hardware before they can produce a verdict. Local work is
+limited to: the gate, the ledger, statistics, case registration, the run-script
+contract, the P3 selector, tests, and docs. Anything that needs `torch.cuda` is
+`blocked` until a GPU session.
 
 ## 6. End-of-Session Checklist
 

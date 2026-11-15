@@ -6,7 +6,7 @@
   "torch": "2.13.0+cu130",
   "cuda": "13.0",
   "triton": "3.7.1",
-  "rules": "protocol/gate_rules.v2.yaml",
+  "rules": "protocol/gate_rules.yaml",
   "hbm_realistic_tbs": 1.613,
   "shapes": [
     {

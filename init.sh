@@ -28,7 +28,7 @@ elif ! install_deps "https://pypi.org/simple" 20; then
   install_deps "https://pypi.tuna.tsinghua.edu.cn/simple" 120
 fi
 
-echo "[init] replaying the archived gate verdicts"
+echo "[init] replaying the measured gate verdict"
 python -m gate.cli --all
 
 echo "[init] running the test suite"

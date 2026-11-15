@@ -1,9 +1,9 @@
 """Command line for the headroom gate.
 
-    python3 -m gate.cli cases/<id>          evaluate one case, write gate_verdict.json
-    python3 -m gate.cli --all               evaluate every case under cases/
-    python3 -m gate.cli --all --record      ... and append each verdict to the ledger
-    python3 -m gate.cli --verify-ledger     P1 ratchet check over the ledger
+    python3 -m gate.cli cases-rtx/<id>       evaluate one measured case
+    python3 -m gate.cli --all                evaluate every measured case
+    python3 -m gate.cli --all --record       ... and append each verdict to the ledger
+    python3 -m gate.cli --verify-ledger      P1 ratchet check over the ledger
 
 Exit codes: 0 = clean, 3 = some case INVALID, 4 = P1 violation found.
 """
@@ -21,6 +21,22 @@ from gate import decide, ledger, rules as rules_mod
 
 REPO = Path(__file__).resolve().parents[1]
 CASES = REPO / "cases"
+RTX_CASES = REPO / "cases-rtx"
+
+
+def _all_case_dirs():
+    """Measured case directories only: cases-rtx/ plus any in cases/ that
+    carry measured_ms. Pre-registered templates (no measured_ms) are skipped."""
+    dirs = []
+    for root in (RTX_CASES, CASES):
+        if not root.is_dir():
+            continue
+        for p in sorted(root.glob("*/case.yaml")):
+            case_dir = p.parent
+            case = yaml.safe_load(p.read_text(encoding="utf-8"))
+            if case.get("workload", {}).get("measured_ms"):
+                dirs.append(case_dir)
+    return dirs
 
 
 def load_case(case_dir):
@@ -47,11 +63,11 @@ def cmd_one(args):
     gate_rules, rules_sha = rules_mod.load_rules(args.rules)
     version = gate_rules["version"]
     if args.all:
-        case_dirs = sorted(p.parent for p in CASES.glob("*/case.yaml"))
+        case_dirs = _all_case_dirs()
     else:
         case_dirs = [Path(args.case).resolve()]
     if not case_dirs:
-        print(f"no cases found under {CASES}", file=sys.stderr)
+        print("no measured cases found under cases-rtx/ or cases/", file=sys.stderr)
         return 3
 
     rc = 0

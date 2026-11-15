@@ -2,12 +2,12 @@ id: swiglu-fusion-b4096-h7168-rtx6000d
 title: Fuse SwiGLU (silu + mul) into one streaming pass (RTX 6000D re-registration)
 status: pre_registered
 date: 2026-11-15
-rules_sha256: "159a6d8c8974347242b17333eca03751a7151028599c5b2f1ddfcf4008555e24"
+rules_sha256: "eace6d1739a6a8d8e05950eda87593c8cd29e2c24ade0191d6f232e1e48436df"
 rules_version: "2.0.0"
 
 hypothesis: >
-  The archived H20 case is not transportable to a different memory system, so
-  this is a separate pre-registration on the AutoDL RTX 6000D host. The claim is
+  A case measured on one memory system is not transportable to another, so this
+  is a standalone pre-registration on the AutoDL RTX 6000D host. The claim is
   unchanged: an MLP block at 4096 tokens with hidden 7168 keeps its gate and up
   projections in one [4096, 14336] bf16 buffer, and the shipped
   F.silu(x[:, :7168]) * x[:, 7168:] launches two kernels and round-trips a

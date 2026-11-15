@@ -17,3 +17,4 @@ private/
 # under evidence/ or cases/<id>/evidence/, not here.
 evidence/runs/
 *.tmp
+.trae-html-share-packages/

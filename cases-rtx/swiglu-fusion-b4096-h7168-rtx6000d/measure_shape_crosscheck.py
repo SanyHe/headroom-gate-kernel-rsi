@@ -1,6 +1,6 @@
-"""Cross-check the v2 device constant outside the registered 176 MB shape.
+"""Cross-check the device constant outside the registered 176 MB shape.
 
-gate_rules.v2.yaml sets hbm_realistic_tbs = 1.613 from a 176 MB three-stream
+gate_rules.yaml sets hbm_realistic_tbs = 1.613 from a 176 MB three-stream
 working set. This script measures the same three-stream traffic and the fused
 kernel at 302 MB and 470 MB to see whether that constant survives a larger
 working set, or whether it is operator-scale only.
@@ -118,7 +118,7 @@ def measure_shape(shape, flush, evict, pairs=20, warmup=10):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--rules", type=Path,
-                    default=REPO / "protocol" / "gate_rules.v2.yaml")
+                    default=REPO / "protocol" / "gate_rules.yaml")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args(argv)
 

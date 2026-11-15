@@ -8,34 +8,39 @@ from gate import decide, rules as rules_mod
 from gate.cli import load_case
 
 REPO = Path(__file__).resolve().parents[1]
+RTX_CASE = REPO / "cases-rtx" / "swiglu-fusion-b4096-h7168-rtx6000d"
+
+# The only measured case published here is the AutoDL RTX 6000D swiglu fusion.
+# The five cases in cases/ are pre-registered templates with no measurement data
+# and produce no verdict.
 EXPECT = {
-    "swiglu-fusion-b4096-h7168": ("GO", 4.993443, 5.004346, 4.999138),
-    "attn-decode-longctx": ("NO-GO", 1.021620, 1.035426, 1.035426),
-    "gemv-m8-bf16": ("NO-GO", 1.021552, 1.048246, 1.029720),
-    "selector-dflash2": ("NO-GO", 1.004749, 1.005068, 1.004906),
-    "verify-fusion-megaspec": ("NO-GO", 1.0, 1.003320, 1.003257),
+    "swiglu-fusion-b4096-h7168-rtx6000d": ("GO", 2.147437, 2.154469, 2.151539),
 }
-# The upstream archive pinned 6280dcff... for its byte-identical YAML. This repo
-# re-typed the file, so the identity hash differs while every number replays
-# (see private/PROGRESS.md and docs/03-eval.md). The hash is pinned here so a
-# silent rules edit fails loudly.
-PINNED_RULES_SHA = "966715a7dfe9df58e71175719fa3f62226d474e368adc42c177fe7d17416bea2"
+
+# The published rules file is frozen; a silent edit must fail loudly.
+PINNED_RULES_SHA = "eace6d1739a6a8d8e05950eda87593c8cd29e2c24ade0191d6f232e1e48436df"
 
 
-def _run(case_id):
+def _run(case_path=RTX_CASE):
     gate_rules, sha = rules_mod.load_rules()
-    return decide.evaluate(load_case(REPO / "cases" / case_id), gate_rules,
+    return decide.evaluate(load_case(case_path), gate_rules,
                            rules_sha256=sha, rules_version=gate_rules["version"])
 
 
-def _case(case_id):
-    return yaml.safe_load(
-        (REPO / "cases" / case_id / "case.yaml").read_text(encoding="utf-8"))
+def _case(case_path=RTX_CASE):
+    return yaml.safe_load(case_path.joinpath("case.yaml").read_text(encoding="utf-8"))
 
 
-def test_archived_verdicts_replay():
+def _measured_template(**overrides):
+    """A minimal valid measured case dict built from the RTX case, for mutation tests."""
+    case = _case()
+    case.update(overrides)
+    return case
+
+
+def test_measured_case_replays():
     for case_id, (verdict, lo, hi, point) in EXPECT.items():
-        doc = _run(case_id)
+        doc = _run()
         assert doc["verdict"] == verdict, (case_id, doc["reasons"])
         p = doc["prediction"]
         assert abs(p["speedup_upper_min"] - lo) < 1e-4, (case_id, p["speedup_upper_min"])
@@ -48,28 +53,47 @@ def test_rules_file_matches_pinned_hash():
     assert sha == PINNED_RULES_SHA
 
 
-def test_every_case_pins_the_current_rules_hash():
+def test_measured_case_pins_the_current_rules_hash():
     _, sha = rules_mod.load_rules()
+    case = _case()
+    assert case["rules_sha256"] == sha
+
+
+def test_template_cases_have_no_measurements():
+    """Pre-registered templates in cases/ carry no measured_ms and produce no verdict."""
     for path in sorted((REPO / "cases").glob("*/case.yaml")):
         case = yaml.safe_load(path.read_text(encoding="utf-8"))
-        assert case["rules_sha256"] == sha, path
+        assert "measured_ms" not in case.get("workload", {}), path
+        assert case.get("status") == "pre_registered", path
 
 
-def test_swiglu_upper_bound_comes_from_the_in_band_kink():
-    doc = _run("swiglu-fusion-b4096-h7168")
+def test_swiglu_upper_bound_is_consistent_with_band_and_cap():
+    """The predicted upper bound is the max of speedup_upper over the band
+    endpoints (and the cap kink, if it falls inside the band)."""
+    doc = _run()
     floor = doc["floor"]["t_floor_ms"]
     cap = doc["addressable"]["cap_ms"]
     kink = floor + cap
     band = doc["measurement"]
-    assert band["lo_ms"] < kink < band["hi_ms"], "kink must fall inside the CI band"
-    expected = kink / floor
-    assert abs(doc["prediction"]["speedup_upper_max"] - expected) < 1e-6
-    # Two-endpoint-only evaluation would land near 4.99 and miss the kink.
-    assert doc["prediction"]["speedup_upper_max"] > 5.0
+    lo, hi = band["lo_ms"], band["hi_ms"]
+
+    # Replicate the gate's candidate set: band endpoints plus kink if in-band.
+    share = 1.0
+    def speedup_at(t):
+        hr = max(0.0, t - floor)
+        applied = min(share * hr, cap, hr)
+        return t / (t - applied) if t > applied else float("inf")
+
+    candidates = [speedup_at(lo), speedup_at(band.get("med_ms", (lo + hi) / 2)),
+                  speedup_at(hi)]
+    if lo < kink < hi:
+        candidates.append(speedup_at(kink))
+    expected_max = max(candidates)
+    assert abs(doc["prediction"]["speedup_upper_max"] - expected_max) < 1e-6
 
 
 def test_out_of_scope_flag_invalidates():
-    bad = deepcopy(_case("swiglu-fusion-b4096-h7168"))
+    bad = _measured_template()
     bad["out_of_scope_checks"]["changes_precision"] = True
     gate_rules, sha = rules_mod.load_rules()
     doc = decide.evaluate(bad, gate_rules, rules_sha256=sha,
@@ -79,8 +103,9 @@ def test_out_of_scope_flag_invalidates():
 
 
 def test_below_floor_is_invalid_not_clipped():
-    bad = deepcopy(_case("swiglu-fusion-b4096-h7168"))
-    bad["workload"]["measured_ms"] = [0.050]   # below the 0.053382 floor
+    bad = _measured_template()
+    floor = bad["workload"].get("empirical_floor_ms", 0.109)
+    bad["workload"]["measured_ms"] = [floor * 0.5]  # below the floor
     gate_rules, sha = rules_mod.load_rules()
     doc = decide.evaluate(bad, gate_rules, rules_sha256=sha,
                           rules_version=gate_rules["version"])
@@ -89,7 +114,7 @@ def test_below_floor_is_invalid_not_clipped():
 
 
 def test_rules_hash_mismatch_invalidates():
-    bad = deepcopy(_case("swiglu-fusion-b4096-h7168"))
+    bad = _measured_template()
     bad["rules_sha256"] = "0" * 64
     gate_rules, sha = rules_mod.load_rules()
     doc = decide.evaluate(bad, gate_rules, rules_sha256=sha,
@@ -99,7 +124,7 @@ def test_rules_hash_mismatch_invalidates():
 
 
 def test_disallowed_mechanism_class_invalidates():
-    bad = deepcopy(_case("swiglu-fusion-b4096-h7168"))
+    bad = _measured_template()
     bad["mechanism"]["class"] = "precision"
     gate_rules, sha = rules_mod.load_rules()
     doc = decide.evaluate(bad, gate_rules, rules_sha256=sha,
@@ -109,7 +134,7 @@ def test_disallowed_mechanism_class_invalidates():
 
 
 def test_missing_required_fields_are_reported():
-    bad = deepcopy(_case("gemv-m8-bf16"))
+    bad = _measured_template()
     del bad["workload"]["measured_ms"]
     gate_rules, sha = rules_mod.load_rules()
     doc = decide.evaluate(bad, gate_rules, rules_sha256=sha,
@@ -119,22 +144,15 @@ def test_missing_required_fields_are_reported():
 
 
 def test_go_requires_both_bounds_above_line():
-    doc = _run("swiglu-fusion-b4096-h7168")
+    doc = _run()
     assert doc["checks"]["n_ge_min_repeats_go"] is True
     assert doc["checks"]["empirical_floor_present"] is True
     assert doc["checks"]["out_of_scope_clean"] is True
     assert doc["prediction"]["speedup_upper_min"] >= 1.30
 
 
-def test_single_sample_case_uses_parametric_band_and_cannot_go():
-    doc = _run("selector-dflash2")
-    assert doc["measurement"]["band_method"] == "parametric"
-    assert doc["prediction"] == doc["prediction"]  # populated, not empty
-    assert doc["verdict"] == "NO-GO"
-
-
 def test_verdict_json_is_serialisable():
-    doc = _run("attn-decode-longctx")
+    doc = _run()
     json.dumps(doc)
     assert doc["kind"] == "hgk_gate_verdict"
-    assert doc["rules_version"] == "1.1.0"
+    assert doc["rules_version"] == "2.0.0"

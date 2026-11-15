@@ -1,6 +1,6 @@
 """The headroom gate: case dict in, verdict dict out.
 
-Pure function of (case, rules). No I/O, no clock, no GPU -- so an archived case
+Pure function of (case, rules). No I/O, no clock, no GPU -- so a measured case
 replays to the same verdict forever.
 """
 

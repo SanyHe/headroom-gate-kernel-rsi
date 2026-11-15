@@ -9,52 +9,51 @@
     "license": "Apache-2.0"
   },
   "summary": {
-    "cases": 5,
+    "cases": 6,
     "go": 1,
-    "no_go": 4,
+    "no_go": 0,
     "inconclusive": 0,
-    "hosts": 2
+    "pending": 5,
+    "hosts": 1
   },
   "cases": [
     {
-      "id": "swiglu-fusion-b4096-h7168",
+      "id": "swiglu-fusion-b4096-h7168-rtx6000d",
       "verdict": "GO",
-      "upper_point": 4.999,
-      "upper_range": [4.993, 5.004],
-      "reason": "176 MB stream fused to one pass; a same-bytes add takes 0.0531 ms.",
-      "reason_zh": "176 MB 流一次读完；同字节量的 add 只要 0.0531 ms。"
+      "upper_point": 2.151,
+      "upper_range": [2.147, 2.155],
+      "reason": "176 MB stream fused to one pass on RTX 6000D; a same-bytes add takes 0.108 ms.",
+      "reason_zh": "176 MB 流在 RTX 6000D 上一次读完；同字节量的 add 只要 0.108 ms。"
+    },
+    {
+      "id": "swiglu-fusion-b4096-h7168",
+      "verdict": "PENDING",
+      "reason": "Template: same design, awaiting third-party cloud measurement.",
+      "reason_zh": "模板：相同设计，等待三方云测量。"
     },
     {
       "id": "attn-decode-longctx",
-      "verdict": "NO-GO",
-      "upper_point": 1.035,
-      "upper_range": [1.022, 1.035],
-      "reason": "128 MiB KV read; a same-bytes sum already costs 0.0614 ms of the 0.0637 ms measured.",
-      "reason_zh": "128 MiB KV 读取；同字节量的 sum 已占掉 0.0637 ms 中的 0.0614 ms。"
+      "verdict": "PENDING",
+      "reason": "Template: 128 MiB KV stream, awaiting measurement.",
+      "reason_zh": "模板：128 MiB KV 流，等待测量。"
     },
     {
       "id": "gemv-m8-bf16",
-      "verdict": "NO-GO",
-      "upper_point": 1.030,
-      "upper_range": [1.022, 1.048],
-      "reason": "200 MiB weight stream; best case is streaming it once, already ~0.0803 ms.",
-      "reason_zh": "200 MiB 权重流；最好情况也只是流一遍，已约 0.0803 ms。"
+      "verdict": "PENDING",
+      "reason": "Template: 200 MiB weight stream, awaiting measurement.",
+      "reason_zh": "模板：200 MiB 权重流，等待测量。"
     },
     {
       "id": "selector-dflash2",
-      "verdict": "NO-GO",
-      "upper_point": 1.005,
-      "upper_range": [1.0048, 1.0051],
-      "reason": "0.11 ms of a 22.68 ms step; capped by time accounting.",
-      "reason_zh": "22.68 ms 的一步里只占 0.11 ms；被时间账本封顶。"
+      "verdict": "PENDING",
+      "reason": "Template: selector fusion, awaiting measurement.",
+      "reason_zh": "模板：选择器融合，等待测量。"
     },
     {
       "id": "verify-fusion-megaspec",
-      "verdict": "NO-GO",
-      "upper_point": 1.003,
-      "upper_range": [1.000, 1.003],
-      "reason": "Avoidable traffic is 0.056 ms of a 17.23 ms step.",
-      "reason_zh": "可省流量在 17.23 ms 的一步里只有 0.056 ms。"
+      "verdict": "PENDING",
+      "reason": "Template: persistent verify-chain megakernel, awaiting measurement.",
+      "reason_zh": "模板：持久化验证链 megakernel，等待测量。"
     }
   ],
   "host": {
@@ -63,7 +62,7 @@
     "torch": "2.13.0+cu130",
     "cuda": "13.0",
     "triton": "3.7.1",
-    "rules": "protocol/gate_rules.v2.yaml",
+    "rules": "protocol/gate_rules.yaml",
     "hbm_realistic_tbs": 1.613
   },
   "host_run": {
@@ -166,8 +165,8 @@
   },
   "caveats": [
     {
-      "en": "One host. The host-local numbers come from a single RTX 6000D with v2 device constants; the archived cases replay on the older H20 measurements.",
-      "zh": "单机。本机数字来自一块 RTX 6000D 和 v2 设备常数；归档案例仍基于较早的 H20 测量。"
+      "en": "One host. All published numbers come from a single AutoDL RTX 6000D. Five pre-registered case templates carry no measurement data and must be re-measured on third-party cloud hardware before they can produce a verdict.",
+      "zh": "单机。所有已发布数字均来自一台 AutoDL RTX 6000D。五个预注册案例模板不含测量数据，须在三方云硬件上重新测量后才能产生判决。"
     },
     {
       "en": "The sealed set is a post-hoc freeze. Shapes were pre-registered, but the manifest was frozen after the candidate existed.",

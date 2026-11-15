@@ -1,7 +1,7 @@
 # 01 — The gate: price the ceiling before touching a kernel
 
 The gate is a pure function in `gate/decide.py`: `(case, rules) -> verdict`. It
-reads no clock, touches no GPU, and writes no files, so an archived case replays
+reads no clock, touches no GPU, and writes no files, so a measured case replays
 to the same verdict forever.
 
 ## 1. Input: one pre-registered case
@@ -27,9 +27,10 @@ t_compute = flops / (FLOP_eff · 1e12) · 1e3
 floor     = max(t_mem, t_compute)
 ```
 
-`BW_eff = 3.30 TB/s` is measured sustained copy bandwidth, not the 4.0 spec
-number; `FLOP_eff = 138 TFLOPS` is measured BF16 dense-GEMM peak. Both live in
-`protocol/gate_rules.yaml`, frozen by hash.
+`BW_eff = 1.613 TB/s` is the measured operator-scale sustained copy bandwidth on
+the AutoDL RTX 6000D host, not a spec-sheet number; `FLOP_eff = 136.8 TFLOPS` is
+the measured BF16 dense-GEMM peak. Both live in `protocol/gate_rules.yaml`,
+frozen by hash.
 
 **An empirical floor may only raise.** Read-dominated operators cannot reach copy
 bandwidth below ~300 MB (measured read ceiling there is 0.95–2.57 TB/s), so the

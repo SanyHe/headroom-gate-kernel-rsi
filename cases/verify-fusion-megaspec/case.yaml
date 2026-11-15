@@ -1,15 +1,15 @@
 id: verify-fusion-megaspec
-title: Fuse the 27B target-verify chain to remove avoidable HBM round trips
-status: vetoed
+title: Fuse the target-verify chain to remove avoidable HBM round trips
+status: pre_registered
 date: 2026-11-14
-rules_sha256: "966715a7dfe9df58e71175719fa3f62226d474e368adc42c177fe7d17416bea2"
-rules_version: "1.1.0"
-replay_of: "private archive p0-2026-11-13 (not redistributed)"
+
+# Template — no measurement data is published here. This case must be
+# re-measured on third-party cloud hardware before it can produce a verdict.
 
 hypothesis: >
   A persistent megakernel over the 64-layer verify chain removes the
-  layer-boundary and GDN/MLP intermediate HBM round trips plus the inter-layer
-  sync, yielding >= 1.3x on a c1 short-context decode step.
+  layer-boundary and intermediate HBM round trips plus the inter-layer sync,
+  yielding a measurable speedup on a short-context decode step.
 
 workload:
   kind: decode_step
@@ -17,13 +17,10 @@ workload:
   dtype: bf16
   concurrency: 1
   bytes:
-    weights: 55098018024     # target 51249200128 + drafter 3848817896, one pass each
-    activations: 492437504   # 307888128 mandatory state + 184549376 avoidable
-    output: 1048576          # kv read+write
+    weights: 55098018024
+    activations: 492437504   # mandatory state + avoidable intermediates
+    output: 1048576
   flops: 0
-  measured_ms: [17.227]
-  measurement_source: "private archive p0-2026-11-13#measured_e2e.c1_short_ctx_short_out"
-  noise_cv: null
 
 mechanism:
   name: persistent layer/chain megakernel removing intermediate round trips
@@ -32,10 +29,9 @@ mechanism:
   removable_flops: 0
   addressable_share_claim: 1.0
   justification: >
-    139,984,896 B of GDN intermediates + 34,078,720 B of attention
-    intermediates + 10,485,760 B of layer-boundary hidden writes are written and
-    re-read per step. At 3.30 TB/s that is 0.056 ms of the 17.23 ms step - a
-    0.33 % traffic share. The mechanism cannot claim the sync/tail residual
+    Intermediate activations (GDN, attention, layer-boundary hidden writes)
+    are written and re-read per step. The byte ledger caps the claim at the
+    avoidable traffic share; the mechanism cannot claim sync/tail residual
     because that is not attributable to the byte ledger.
 
 measurement_plan:

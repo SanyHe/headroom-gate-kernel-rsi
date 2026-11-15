@@ -8,8 +8,8 @@
     "conservative upper bound 2.1474x >= go line 1.3x"
   ],
   "rules_version": "2.0.0",
-  "rules_sha256": "159a6d8c8974347242b17333eca03751a7151028599c5b2f1ddfcf4008555e24",
-  "hypothesis": "The archived H20 case is not transportable to a different memory system, so this is a separate pre-registration on the AutoDL RTX 6000D host. The claim is unchanged: an MLP block at 4096 tokens with hidden 7168 keeps its gate and up projections in one [4096, 14336] bf16 buffer, and the shipped F.silu(x[:, :7168]) * x[:, 7168:] launches two kernels and round-trips a 58.7 MB silu intermediate. A single fused pass that reads the 117.4 MB buffer once and writes 58.7 MB is expected to recover most of the gap to a kernel that moves the same bytes.\n",
+  "rules_sha256": "eace6d1739a6a8d8e05950eda87593c8cd29e2c24ade0191d6f232e1e48436df",
+  "hypothesis": "A case measured on one memory system is not transportable to another, so this is a standalone pre-registration on the AutoDL RTX 6000D host. The claim is unchanged: an MLP block at 4096 tokens with hidden 7168 keeps its gate and up projections in one [4096, 14336] bf16 buffer, and the shipped F.silu(x[:, :7168]) * x[:, 7168:] launches two kernels and round-trips a 58.7 MB silu intermediate. A single fused pass that reads the 117.4 MB buffer once and writes 58.7 MB is expected to recover most of the gap to a kernel that moves the same bytes.\n",
   "mechanism": {
     "name": "one fused silu_and_mul pass over the interleaved gate/up buffer",
     "class": "fusion",
@@ -100,6 +100,6 @@
   "decision_trace": [
     "conservative upper bound 2.1474x >= go line 1.3x"
   ],
-  "generated_at": "2026-11-15T14:57:57+08:00",
-  "case_sha256": "9995fbc642e19be0cf6932216c562d0ab577fee1955017643e75a5501ca00483"
+  "generated_at": "2026-11-15T18:28:57+08:00",
+  "case_sha256": "43d71e25a9d1aa5dc4746c2b1bd579fc6a7a60fb2c251fe6fa1192823d52b6c6"
 }

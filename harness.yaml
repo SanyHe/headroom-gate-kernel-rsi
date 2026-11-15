@@ -6,8 +6,9 @@ project:
   name: headroom-gate-kernel-rsi
   description: >
     A falsifiable gate for GPU kernel work: price the ceiling before optimizing,
-    then let one held-out measurement decide. Ships five pre-registered cases
-    that replay to their archived verdicts without a GPU.
+    then let one held-out measurement decide. Ships one measured case on the
+    AutoDL RTX 6000D plus five pre-registered case templates that carry no
+    measurement data and must be re-measured on third-party cloud hardware.
   phases: [P0_gate, P1_kernel, P2_sealed, P3_sweep]
   strict_order: true
 
@@ -17,7 +18,7 @@ guardrails:
   no_secrets_in_repo: true
   # Kernel work and every timing run happen on the GPU host, never locally.
   gpu_runs_on_cloud_only: true
-  gpu_type: "NVIDIA H20 96GB"
+  gpu_type: "NVIDIA RTX 6000D"
   comments_language: en
   # protocol/gate_rules.yaml is hash-frozen; a verdict cites its sha256.
   rules_are_frozen_by_hash: true

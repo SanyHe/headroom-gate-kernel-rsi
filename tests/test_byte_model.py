@@ -36,30 +36,30 @@ def test_gemm_io_bytes_rejects_non_positive_shapes():
 
 def test_roofline_memory_bound_swiglu():
     ledger = {"activations": 117440512, "output": 58720256, "weights": 0}
-    floor = byte_model.roofline(byte_model.sum_bytes(ledger), 176160768, 3.30, 138.0)
+    floor = byte_model.roofline(byte_model.sum_bytes(ledger), 176160768, 1.613, 136.8)
     assert floor.bytes_total == 176160768
     assert floor.regime == "memory"
-    assert floor.t_mem_ms == pytest.approx(0.0533818, rel=1e-5)
-    assert floor.t_compute_ms == pytest.approx(0.001277, abs=1e-6)
-    assert floor.t_floor_ms == pytest.approx(0.053382, abs=1e-6)
+    assert floor.t_mem_ms == pytest.approx(0.109213, rel=1e-5)
+    assert floor.t_compute_ms == pytest.approx(0.001288, abs=1e-6)
+    assert floor.t_floor_ms == pytest.approx(0.109213, abs=1e-6)
 
 
 def test_roofline_compute_bound_labels_regime():
-    # 4096^3 BF16 GEMM: 137 GFLOP over 268 MB -> compute bound on this host.
+    # 4096^3 BF16 GEMM: 137 GFLOP over ~100 MB -> compute bound on this host.
     floor = byte_model.roofline(3 * 4096 * 4096 * 2, byte_model.gemm_flops(4096, 4096, 4096),
-                                3.30, 138.0)
+                                1.613, 136.8)
     assert floor.regime == "compute"
     assert floor.t_compute_ms > floor.t_mem_ms
 
 
 def test_empirical_floor_can_only_raise():
-    base = byte_model.roofline(134217728, 536870912, 3.30, 138.0)
-    raised = byte_model.with_empirical_floor(base, 0.061424)
+    base = byte_model.roofline(134217728, 536870912, 1.613, 136.8)
+    raised = byte_model.with_empirical_floor(base, 0.10)
     assert raised.floor_source == "empirical"
-    assert raised.t_floor_ms == 0.061424
+    assert raised.t_floor_ms == 0.10
     assert raised.analytic_floor_ms == base.t_floor_ms
 
-    ignored = byte_model.with_empirical_floor(base, 0.030)
+    ignored = byte_model.with_empirical_floor(base, 0.03)
     assert ignored.floor_source == "analytic"
     assert ignored.t_floor_ms == base.t_floor_ms
 
@@ -67,16 +67,16 @@ def test_empirical_floor_can_only_raise():
 
 
 def test_empirical_floor_must_be_positive():
-    base = byte_model.roofline(1024, 0, 3.30, 138.0)
+    base = byte_model.roofline(1024, 0, 1.613, 136.8)
     with pytest.raises(ValueError):
         byte_model.with_empirical_floor(base, 0.0)
 
 
 def test_roofline_rejects_empty_stream():
     with pytest.raises(ValueError):
-        byte_model.roofline(0, 0, 3.30, 138.0)
+        byte_model.roofline(0, 0, 1.613, 136.8)
     with pytest.raises(ValueError):
-        byte_model.roofline(1024, 0, 0.0, 138.0)
+        byte_model.roofline(1024, 0, 0.0, 136.8)
 
 
 def test_gbps_round_trip():

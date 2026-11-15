@@ -1,15 +1,15 @@
 id: selector-dflash2
-title: Replace the DFlash2 candidate-lattice path selector with a fused walk
-status: vetoed
+title: Replace the candidate-lattice path selector with a fused walk
+status: pre_registered
 date: 2026-11-14
-rules_sha256: "966715a7dfe9df58e71175719fa3f62226d474e368adc42c177fe7d17416bea2"
-rules_version: "1.1.0"
-replay_of: "private archive p0-2026-11-13 (not redistributed)"
+
+# Template — no measurement data is published here. This case must be
+# re-measured on third-party cloud hardware before it can produce a verdict.
 
 hypothesis: >
   The selector reads as a hot spot in the draft path, so fusing hidden
   projection + edge scoring + path walk into one kernel yields a measurable
-  end-to-end gain on the c1 short-context decode cycle.
+  end-to-end gain on the short-context decode cycle.
 
 workload:
   kind: decode_step
@@ -17,28 +17,21 @@ workload:
   dtype: bf16
   concurrency: 1
   bytes:
-    weights: 55098018024     # target 51249200128 + drafter 3848817896
-    activations: 307888128   # gdn/attention decode state, not selector-specific
+    weights: 55098018024
+    activations: 307888128
     output: 1048576
   flops: 0
-  measured_ms: [22.68]
-  measurement_source: "private archive p0-2026-11-13#section-3"
-  noise_cv: null
 
 mechanism:
   name: fuse hidden projection + edge scoring + path walk into one selector kernel
   class: fusion
   removable_bytes: 1048576
-  removable_ms: 0.110718
-  removable_ms_source: "private archive p0-2026-11-13#selector_microbench"
   removable_flops: 0
   addressable_share_claim: 1.0
   justification: >
-    The selector is latency-bound, not byte-bound: its entire unfused cost is
-    110.7 us/step (hidden proj 14.1 + scoring 82.0 + walk 14.6), so even
-    deleting it completely can only save 0.11 ms of a 22.68 ms cycle. The byte
-    ledger caps the claim at 0.0003 ms, far below the time accounting, so the
-    time accounting binds - and it is 0.49 % of the cycle.
+    The selector is latency-bound, not byte-bound: its byte-ledger claim is
+    capped well below the time accounting, so the time accounting binds. The
+    mechanism can only claim what the byte ledger attributes to it.
 
 measurement_plan:
   baseline: "speculative-decode step, c1 short ctx, selector in engine (compiled)"

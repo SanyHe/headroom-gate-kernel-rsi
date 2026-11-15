@@ -1,25 +1,29 @@
-# FROZEN — hash-protected. Editing this file invalidates every verdict produced
-# under the previous version. Bump `version` and re-pre-register instead.
-#
-# Every verdict embeds sha256(this file). gate/rules.py refuses to load a file
-# whose hash does not match a case's recorded rules_sha256.
-version: "1.1.0"
-frozen_at: "2026-11-14"
+# FROZEN — host-specific device constants for the AutoDL RTX 6000D host.
+# This file is the sole published rules set; all measurements are taken on
+# third-party cloud hardware. Every verdict cites sha256(this file) and
+# version 2.0.0.
+version: "2.0.0"
+frozen_at: "2026-11-15"
 
 device:
-  name: "NVIDIA H20 96GB"
-  hbm_spec_tbs: 4.0
-  # Conservative sustained copy bandwidth measured on this host
-  hbm_realistic_tbs: 3.30
-  # Measured BF16 dense GEMM peak on this host.
-  bf16_peak_tflops: 138.0
+  name: "NVIDIA RTX 6000D"
+  # No vendor number was available for this SKU; left null rather than invented.
+  hbm_spec_tbs: null
+  # Measured with gate.probes on 2026-11-15, L2-flushed, three-stream
+  # (2 reads + 1 write) at 176 MB of traffic: 1.613 TB/s. This is the
+  # operator-scale constant, because the gate prices per-case working sets.
+  # Sustained copy at 2-4 GB is only 1.29 TB/s and stream at 1 GB is 1.36 TB/s;
+  # large-working-set cases must therefore carry a same-bytes empirical floor.
+  hbm_realistic_tbs: 1.613
+  # Lower of the two 8192^3 BF16 GEMM medians measured on this host; using the
+  # lower value keeps compute-bound floors conservative.
+  bf16_peak_tflops: 136.8
   notes: >
-    BW_eff is copy bandwidth, not the 4.0 TB/s spec sheet. FLOP_eff is the full
-    measured peak, so compute-bound floors are not flattered. v1.1.0 adds the
-    requirement that a green light also cite a same-bytes reference-kernel floor
-    (see floor_model), because copy bandwidth is unreachable for read-dominated
-    streams below ~300 MB: measured read ceilings there are 0.95-2.57 TB/s while
-    the const is 3.30.
+    Bandwidth on this card is working-set dependent (L2 residency): a 2-4 GB
+    copy measures 1.29 TB/s, a 176 MB three-stream kernel 1.613 TB/s. v2 fixes
+    BW_eff at the operator scale so the analytic floor is a real lower bound for
+    the pre-registered operator cases. Nothing else differs from v1.1.0:
+    thresholds, statistics, scope and measurement protocol are unchanged.
 
 decision:
   go_min_speedup: 1.30
@@ -27,24 +31,17 @@ decision:
   min_headroom_fraction: 0.02
   min_repeats_go: 5
   max_cv_for_go: 0.02
-  # Used when n < min_repeats_go: parametric band around the median.
   assumed_cv_single_sample: 0.02
   z90: 1.6448536269514722
-  # v1.1.0: an analytic floor may veto, but it may never grant a GO.
   require_empirical_floor_for_go: true
 
 floor_model:
-  # A case may declare workload.empirical_floor_ms: the time a trivial kernel
-  # needs to move the same bytes, with a named evidence file. The gate uses
-  # max(analytic, empirical), so the value can only raise the floor.
   empirical_floor: optional
   applied_as: max(analytic_roofline, empirical_reference_kernel)
   notes: >
-    Rationale: for read-dominated operators the analytic floor uses copy
-    bandwidth and is therefore too low, which manufactures headroom that does
-    not exist. A reference kernel that reads the same buffers is a defensible
-    lower bound on any kernel that must move those bytes. Because the floor is
-    raised, P1 (predicted >= realised) stays safe by construction.
+    Unchanged from v1.1.0. Because BW_eff is now calibrated at the operator
+    working set, the analytic floor and the same-bytes reference agree to about
+    1 % on the SwiGLU case; the empirical floor still wins whenever it is higher.
 
 statistics:
   bootstrap_resamples: 10000
@@ -53,7 +50,6 @@ statistics:
   ci_upper_pct: 95.0
 
 scope:
-  # Any `true` in a case's out_of_scope_checks makes the case INVALID.
   forbidden_changes:
     - changes_precision
     - changes_model

@@ -10,7 +10,7 @@
       "nav.spec": "Gate spec",
       "hero.eyebrow": "Kernel research · pre-registered · replayable",
       "hero.title": "Price the ceiling before you write the kernel.",
-      "hero.lead": "Most kernel write-ups never state a ceiling, so any gain looks like progress. This project makes the ceiling an input: compulsory bytes, a measured floor, a predicted upper bound. Five archived cases replay offline — four of them say no.",
+      "hero.lead": "Most kernel write-ups never state a ceiling, so any gain looks like progress. This project makes the ceiling an input: compulsory bytes, a measured floor, a predicted upper bound. One measured case on the AutoDL RTX 6000D replays offline; five pre-registered templates await third-party cloud measurement.",
       "gate.title": "The gate",
       "gate.bytes.title": "Bytes",
       "gate.bytes.body": "Sum the compulsory traffic: weights, activations, output. It cannot be argued down. A mechanism can only remove what it touches.",
@@ -18,17 +18,18 @@
       "gate.floor.body": "max(bytes / BW_eff, flops / FLOP_eff), both measured. A same-bytes reference kernel can raise the floor and can never lower it.",
       "gate.verdict.title": "Verdict",
       "gate.verdict.body": "GO only if the conservative end of the band clears 1.30×. Below 1.15× is NO-GO. In between is INCONCLUSIVE — an honest answer, not a failure.",
-      "cases.title": "Five cases, one GO",
-      "cases.lead": "Each verdict is arithmetic over recorded samples, so the whole board replays on a laptop with no GPU. The point is not the one win; it is how cheaply the other four ideas die.",
+      "cases.title": "One measured case, five templates",
+      "cases.lead": "Each verdict is arithmetic over recorded samples, so the measured case replays on a laptop with no GPU. Five pre-registered templates show the methodology and await third-party cloud measurement.",
       "cases.th.case": "Case",
       "cases.th.verdict": "Verdict",
       "cases.th.upper": "Predicted ceiling",
       "cases.th.why": "Why",
       "host.title": "On the host: predicted vs realised",
-      "host.lead": "The archived case was re-registered on a different GPU with v2 device constants, then measured. The candidate was written only after the ceiling was fixed.",
-      "stat.cases": "archived cases",
+      "host.lead": "The GO case was registered and measured on the AutoDL RTX 6000D. The candidate was written only after the ceiling was fixed.",
+      "stat.cases": "cases",
       "stat.nogo": "NO-GO",
       "stat.go": "GO",
+      "stat.pending": "pending",
       "stat.e2e": "at model level",
       "stat.e2ePending": "end-to-end pending",
       "sealed.title": "Held-out shapes",
@@ -66,7 +67,7 @@
       "nav.spec": "门禁规范",
       "hero.eyebrow": "Kernel研究 · 预注册 · 可复现",
       "hero.title": "先给天花板定价，再写Kernel。",
-      "hero.lead": "多数Kernel文章从不给出天花板，于是任何收益都显得像进展。这个项目把天花板变成输入：强制字节量、实测地板、预测上界。五个归档案例可离线重放——其中四个结论是“不要做”。",
+      "hero.lead": "多数Kernel文章从不给出天花板，于是任何收益都显得像进展。这个项目把天花板变成输入：强制字节量、实测地板、预测上界。一个在 AutoDL RTX 6000D 上实测的案例可离线重放；五个预注册模板等待三方云测量。",
       "gate.title": "门禁",
       "gate.bytes.title": "字节",
       "gate.bytes.body": "把强制流量加总：权重、激活、输出。它不能被辩论掉。一个机制只能省掉它真正触及的部分。",
@@ -74,17 +75,18 @@
       "gate.floor.body": "max(bytes / BW_eff, flops / FLOP_eff)，两个常数都是实测值。同字节量的参考Kernel可以把地板抬高，绝不会压低。",
       "gate.verdict.title": "结论",
       "gate.verdict.body": "只有区间的保守端超过 1.30× 才是 GO；低于 1.15× 是 NO-GO；中间是 INCONCLUSIVE——这是诚实的答案，不是失败。",
-      "cases.title": "五个案例，一个 GO",
-      "cases.lead": "每个结论都是对已记录样本的算术，因此整块看板可以在一台没有 GPU 的笔记本上重放。重点不是那一个赢家，而是另外四个想法死得多便宜。",
+      "cases.title": "一个实测案例，五个模板",
+      "cases.lead": "每个结论都是对已记录样本的算术，因此实测案例可以在一台没有 GPU 的笔记本上重放。五个预注册模板展示方法论，等待三方云测量。",
       "cases.th.case": "案例",
       "cases.th.verdict": "结论",
       "cases.th.upper": "预测天花板",
       "cases.th.why": "原因",
       "host.title": "主机实测：预测与实现",
-      "host.lead": "归档案例用 v2 设备常数在另一块 GPU 上重新注册，然后才测量。候选Kernel只在天花板固定之后才写。",
-      "stat.cases": "归档案例",
+      "host.lead": "GO 案例在 AutoDL RTX 6000D 上注册并测量。候选Kernel只在天花板固定之后才写。",
+      "stat.cases": "案例",
       "stat.nogo": "NO-GO",
       "stat.go": "GO",
+      "stat.pending": "待测量",
       "stat.e2e": "模型级",
       "stat.e2ePending": "端到端待测",
       "sealed.title": "留出形状",
@@ -193,8 +195,8 @@
       : "—";
     const items = [
       [s.cases, t("stat.cases"), ""],
-      [s.no_go, t("stat.nogo"), "no"],
       [s.go, t("stat.go"), "go"],
+      [s.pending || 0, t("stat.pending"), ""],
       [model, measured ? t("stat.e2e") : t("stat.e2ePending"), measured ? "go" : ""],
     ];
     for (const [value, label, cls] of items) {
@@ -215,12 +217,12 @@
       tr.append(idCell);
       const verdict = el("td");
       verdict.append(el("span", {
-        class: `pill ${c.verdict === "GO" ? "go" : c.verdict === "NO-GO" ? "nogo" : "inc"}`,
+        class: `pill ${c.verdict === "GO" ? "go" : c.verdict === "NO-GO" ? "nogo" : c.verdict === "PENDING" ? "pending" : "inc"}`,
       }, c.verdict));
       tr.append(verdict);
       const range = Array.isArray(c.upper_range)
         ? `${num(c.upper_range[0], c.upper_range[1] < 1.01 ? 4 : 2)}–${num(c.upper_range[1], c.upper_range[1] < 1.01 ? 4 : 2)}×`
-        : `${num(c.upper_point, 2)}×`;
+        : c.upper_point != null ? `${num(c.upper_point, 2)}×` : "—";
       tr.append(el("td", { class: "num" }, `${range}`));
       tr.append(el("td", { class: "why" }, pick(c, "reason")));
       tbody.append(tr);
@@ -254,8 +256,8 @@
     const shapes = (data.crosscheck && data.crosscheck.shapes) || [];
     const gains = shapes.map((x) => `${num(x.speedup, 2)}×`).join(" / ");
     cross.textContent = lang === "zh"
-      ? `v2 常数 ${num(data.host.hbm_realistic_tbs, 3)} TB/s 在 ${shapes.length} 个形状上复核：${gains}，全部逐位一致。`
-      : `The v2 constant ${num(data.host.hbm_realistic_tbs, 3)} TB/s was exercised at ${shapes.length} shapes: ${gains}, all bit-identical.`;
+      ? `常数 ${num(data.host.hbm_realistic_tbs, 3)} TB/s 在 ${shapes.length} 个形状上复核：${gains}，全部逐位一致。`
+      : `The constant ${num(data.host.hbm_realistic_tbs, 3)} TB/s was exercised at ${shapes.length} shapes: ${gains}, all bit-identical.`;
   }
 
   function sealedChart() {

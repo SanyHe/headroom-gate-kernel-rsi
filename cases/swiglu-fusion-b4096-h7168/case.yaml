@@ -2,8 +2,9 @@ id: swiglu-fusion-b4096-h7168
 title: Fuse SwiGLU (silu + mul) into one streaming pass
 status: pre_registered
 date: 2026-11-14
-rules_sha256: "966715a7dfe9df58e71175719fa3f62226d474e368adc42c177fe7d17416bea2"
-rules_version: "1.1.0"
+
+# Template — no measurement data is published here. This case must be
+# re-measured on third-party cloud hardware before it can produce a verdict.
 
 hypothesis: >
   An MLP block at 4096 tokens with hidden 7168 stores its gate and up
@@ -11,8 +12,8 @@ hypothesis: >
   F.silu(x[:, :7168]) * x[:, 7168:], which launches two kernels, writes the
   58.7 MB silu output back to HBM only to read it again, and walks both inputs
   as non-contiguous views. A single fused kernel that reads the 117.4 MB buffer
-  once and writes 58.7 MB is claimed to recover most of the measured gap to a
-  kernel that moves the same bytes.
+  once and writes 58.7 MB is expected to recover most of the gap to a kernel
+  that moves the same bytes.
 
 workload:
   kind: swiglu
@@ -26,52 +27,18 @@ workload:
     output: 58720256         # 4096 * 7168 * 2
     weights: 0
   flops: 176160768           # ~6 flops per output element (sigmoid, mul, mul)
-  measured_ms:
-    - 0.2724800109863281
-    - 0.26681599020957947
-    - 0.26716798543930054
-    - 0.26630398631095886
-    - 0.26707199215888977
-    - 0.2669120132923126
-    - 0.2654399871826172
-    - 0.26739200949668884
-    - 0.2678399980068207
-    - 0.26576000452041626
-    - 0.26681599020957947
-    - 0.265855997800827
-    - 0.2702080011367798
-    - 0.2661759853363037
-    - 0.26556798815727234
-    - 0.2667520046234131
-    - 0.267551988363266
-    - 0.2685120105743408
-    - 0.2672320008277893
-    - 0.26655998826026917
-  measurement_source: "cases/swiglu-fusion-b4096-h7168/evidence/baseline_20261114T085052.json#baseline"
-  empirical_floor_ms: 0.05310400016605854
-  empirical_floor_source: "cases/swiglu-fusion-b4096-h7168/evidence/baseline_20261114T085052.json#reference"
-  noise_cv: 0.006173550881903271
-  evidence_note: >
-    Measured on GPU0 2026-11-14 with measure_baseline.py: 10 warmup, 20 timed
-    repeats, CUDA events around one launch, 256 MB read flush before each
-    repeat. Shipped path median 0.26686 ms = 660 GB/s of ledger traffic; the
-    same math on contiguous halves is 0.10693 ms, so roughly half the gap is
-    layout and half is the extra 117.4 MB round trip. torch.add(a, b) over the
-    identical 176.1 MB runs in 0.05310 ms (3.32 TB/s).
 
 mechanism:
   name: one fused silu_and_mul pass over the interleaved gate/up buffer
   class: fusion
   removable_bytes: 0
-  removable_ms: 0.2137600015848875
-  removable_ms_source: "cases/swiglu-fusion-b4096-h7168/evidence/baseline_20261114T085052.json#headroom_ratio"
   removable_flops: 0
   addressable_share_claim: 1.0
   justification: >
-    torch.add(a, b) moves exactly the fused kernel's bytes with the same
-    contiguous access pattern and finishes in 0.05310 ms, so the missing time
-    is addressable, not a property of the workload. The output is bit-identical:
-    silu and mul are elementwise.
+    A same-bytes reference kernel (e.g. torch.add over the identical traffic)
+    moves exactly the fused kernel's bytes with the same contiguous access
+    pattern, so the missing time is addressable, not a property of the
+    workload. The output is bit-identical: silu and mul are elementwise.
 
 measurement_plan:
   baseline: "F.silu(x[:, :H]) * x[:, H:] on a contiguous [B, 2H] buffer"

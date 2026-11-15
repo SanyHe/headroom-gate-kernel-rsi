@@ -4,10 +4,12 @@ A falsifiable gate for GPU kernel work. Before optimizing anything, price the
 ceiling from a byte/FLOP ledger; after measuring, let one held-out run decide.
 
 Most kernel write-ups fail in the same direction: the ceiling is never stated, so
-any gain looks like progress. This repo makes the ceiling an input. Five
-pre-registered cases — one GO, four NO-GO — replay to their archived verdicts on
-a laptop, with no GPU, because the gate is pure arithmetic over recorded
-measurements.
+any gain looks like progress. This repo makes the ceiling an input. One measured
+case on the AutoDL RTX 6000D replays to its archived verdict on a laptop with no
+GPU, because the gate is pure arithmetic over recorded measurements. Five
+additional cases ship as pre-registered templates with no measurement data — they
+must be re-measured on third-party cloud hardware before they can produce a
+verdict.
 
 **English** · [简体中文](./README.zh-CN.md) · [Results board](https://sanyhe.github.io/headroom-gate-kernel-rsi/)
 
@@ -15,10 +17,10 @@ measurements.
 
 1. **Bytes.** The workload's compulsory traffic (weights + activations + output)
    is summed. It cannot be argued down.
-2. **Floor.** `max(bytes / BW_eff, flops / FLOP_eff)` — 3.30 TB/s and 138 TFLOPS
-   on the archived H20 host, both measured, not spec-sheet; the RTX case re-pins
-   its constants in `protocol/gate_rules.v2.yaml`. An optional same-bytes
-   reference kernel raises this floor and can never lower it.
+2. **Floor.** `max(bytes / BW_eff, flops / FLOP_eff)` — 1.613 TB/s and 136.8
+   TFLOPS on the AutoDL RTX 6000D host, both measured, not spec-sheet, frozen in
+   `protocol/gate_rules.yaml`. An optional same-bytes reference kernel raises
+   this floor and can never lower it.
 3. **Headroom.** `measured_median - floor` is the only slack that exists.
 4. **Addressable.** `min(claim × headroom, removable_bytes / BW, removable_ms)`.
    A mechanism cannot remove more time than the bytes or the time it touches.
@@ -34,22 +36,24 @@ python3 -m gate.cli --all
 
 | Case | Verdict | Upper bound (5–95 %, point) | Why |
 |---|---|---|---|
-| `swiglu-fusion-b4096-h7168` | **GO** | 4.993–5.004× (4.999×) | 176 MB stream, fused to one pass; `torch.add` over the same bytes takes 0.0531 ms |
-| `attn-decode-longctx` | NO-GO | 1.022–1.035× | 128 MiB of KV read; a sum over the same cache is already 0.0614 ms vs 0.0637 ms measured |
-| `gemv-m8-bf16` | NO-GO | 1.022–1.048× (1.030×) | 200 MiB weight stream; the best case is streaming it once, already ~0.0803 ms |
-| `selector-dflash2` | NO-GO | 1.0048–1.0051× | 0.11 ms of a 22.68 ms step, capped by time accounting |
-| `verify-fusion-megaspec` | NO-GO | 1.000–1.003× | avoidable traffic is 0.056 ms of a 17.23 ms step |
+| `swiglu-fusion-b4096-h7168-rtx6000d` | **GO** | 2.147–2.155× (2.151×) | 176 MB stream fused to one pass on RTX 6000D; `torch.add` over the same bytes takes 0.108 ms |
+| `swiglu-fusion-b4096-h7168` | pending | — | template: same design, awaiting third-party cloud measurement |
+| `attn-decode-longctx` | pending | — | template: 128 MiB KV stream, awaiting measurement |
+| `gemv-m8-bf16` | pending | — | template: 200 MiB weight stream, awaiting measurement |
+| `selector-dflash2` | pending | — | template: selector fusion, awaiting measurement |
+| `verify-fusion-megaspec` | pending | — | template: persistent verify-chain megakernel, awaiting measurement |
 
-The four NO-GOs are the useful output: each one is a well-known optimization that
-cannot pay for itself, priced before a line of kernel code was written.
+The published result is the one GO case measured on third-party cloud hardware.
+The five templates are pre-registered designs with no measurement data; they show
+the methodology and can be re-measured on any third-party cloud GPU.
 
 ## Quickstart
 
 ```bash
-./init.sh                                   # venv + replay + tests, no GPU
-python3 -m gate.cli cases/attn-decode-longctx   # one case -> gate_verdict.json
-python3 -m gate.cli --all --record          # append verdicts to ledger.jsonl
-python3 -m gate.cli --verify-ledger         # claim P1: realised <= predicted
+./init.sh                                                # venv + replay + tests, no GPU
+python3 -m gate.cli cases-rtx/swiglu-fusion-b4096-h7168-rtx6000d  # one measured case -> verdict
+python3 -m gate.cli --all --record                       # append verdicts to ledger.jsonl
+python3 -m gate.cli --verify-ledger                      # claim P1: realised <= predicted
 ```
 
 Requirements: Python 3.10+, `PyYAML`, `pytest`. Nothing else.
@@ -78,25 +82,27 @@ Implemented and verified locally (no GPU):
 | Bootstrap / parametric bands, paired tests | `stats/bootstrap.py` |
 | Append-only ledger + P1 ratchet | `gate/ledger.py` |
 | CLI + verdict artifacts | `gate/cli.py` |
-| Five pre-registered cases | `cases/*/case.yaml` |
+| Five pre-registered case templates | `cases/*/case.yaml` |
+| One measured case (RTX 6000D) | `cases-rtx/*/case.yaml` |
 | Detached-run contract (detach / status / stop / resume) | `scripts/` |
 | Frozen P3 policy + selection | `p3/policy.md`, `p3/select.py` |
 | 71 CPU tests | `tests/` |
 
-Measured on a second host (RTX 6000D, v2 constants): the operator reaches 1.92×
-(Triton) and 2.12× (CUDA) with bit-identical output, the held-out shapes hold at
-1.88× / 1.30× / 1.72×, and the P1 ratchet is intact. At model level the same
-fusion is 1.00×: a 4096-token prefill is launch-bound, so 8.3 ms of saved
+Measured on the AutoDL RTX 6000D host (third-party cloud): the operator reaches
+1.92× (Triton) and 2.12× (CUDA) with bit-identical output, the held-out shapes
+hold at 1.88× / 1.30× / 1.72×, and the P1 ratchet is intact. At model level the
+same fusion is 1.00×: a 4096-token prefill is launch-bound, so 8.3 ms of saved
 activation GPU time does not move the 506 ms step. That is the published boundary
 condition — see [03 — Evaluation](./docs/en/03-eval.md#6-second-host-a-boundary-condition-result).
 Still pending: a registered P3 selection (exploratory timings exist; the pool has
 no accuracy trials).
 
-Because of that split, the five archived verdicts are replayed from the recorded
-`measured_ms` in `case.yaml`, not re-measured. Every sample used is embedded in
-the case file; the original raw archive is private and not redistributed.
-`case.yaml` is append-only; see
-[`docs/02-measurement.md`](./docs/02-measurement.md).
+The measured case's verdict is replayed from the recorded `measured_ms` in its
+`case.yaml`, not re-measured. Every sample used is embedded in the case file; the
+raw evidence lives under `cases-rtx/<id>/evidence/`. `case.yaml` is append-only;
+see [`docs/02-measurement.md`](./docs/02-measurement.md). The five template cases
+in `cases/` carry no `measured_ms` and produce no verdict until re-measured on
+third-party cloud hardware.
 
 ## Layout
 
@@ -104,8 +110,9 @@ the case file; the original raw archive is private and not redistributed.
 protocol/gate_rules.yaml   frozen thresholds, device constants, scope
 gate/                      byte model, decide, ledger, CLI, device probes
 stats/bootstrap.py         median CI, parametric band, paired bootstrap
-cases/<id>/case.yaml       pre-registered hypothesis, bytes, measurements
-cases/<id>/gate_verdict.json  generated; never hand-edited
+cases/<id>/case.yaml       pre-registered template: hypothesis, bytes, no measurements
+cases-rtx/<id>/case.yaml   measured case with recorded samples
+cases-rtx/<id>/gate_verdict.json  generated; never hand-edited
 p3/                        frozen selection policy + deterministic selector
 scripts/                   detached-run contract (status.json is the truth)
 docs/                      method, measurement, evaluation, P3
@@ -117,8 +124,8 @@ private/                   harness state (gitignored)
 - [01 — The gate](./docs/en/01-gate.md): ledger, floor, caps, band, verdicts.
 - [02 — Measurement](./docs/en/02-measurement.md): timing protocol and the
   detached-run contract.
-- [03 — Evaluation](./docs/en/03-eval.md): P1/P2, the five replays, the second
-  host's boundary condition, and the one honest deviation in this repo.
+- [03 — Evaluation](./docs/en/03-eval.md): P1/P2, the measured RTX 6000D case,
+  the boundary condition, and the one honest deviation in this repo.
 - [04 — P3](./docs/en/04-p3.md): pre-registered selection and the joint-impact rule.
 
 ## License

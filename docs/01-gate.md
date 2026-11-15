@@ -26,7 +26,7 @@ t_compute = flops / (FLOP_eff · 1e12) · 1e3
 floor     = max(t_mem, t_compute)
 ```
 
-`BW_eff = 3.30 TB/s` 是本机实测的持续拷贝带宽，不是 4.0 的规格值；`FLOP_eff = 138 TFLOPS`
+`BW_eff = 1.613 TB/s` 是 AutoDL RTX 6000D 主机上算子尺度的实测持续拷贝带宽，不是规格值；`FLOP_eff = 136.8 TFLOPS`
 是实测 BF16 稠密 GEMM 峰值。两者都写进 `protocol/gate_rules.yaml` 并由哈希冻结。
 
 **经验地板只抬不降。** 读主导的算子在 300 MB 以下到不了拷贝带宽（实测读上限

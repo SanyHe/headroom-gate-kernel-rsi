@@ -60,4 +60,4 @@ git commit、可见 GPU）、`input_manifest.json`（每个输入文件的 sha25
 本仓库尚未落地 GPU 侧脚本（`measure_baseline.py`、`measure_candidate.py`、
 `sealed_eval.py`、`kernel.py`、`measure_dispatch.py`、`e2e_qwen3_8b.py`、`analyze_e2e.py`、
 `scripts/compare.py`、`p3/measure_pool.py`）。它们全部标记为 `blocked`，不伪造成“已完成”。
-现有五个归档判决因此是从已记录样本复算，而不是在本机重新测量。
+现有实测判决因此是从已记录样本复算，而不是在本机重新测量。`cases/` 下的五个模板案例不含样本，在三方云硬件上重新测量前不产生判决。

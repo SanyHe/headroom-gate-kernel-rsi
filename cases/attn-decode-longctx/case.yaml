@@ -1,28 +1,16 @@
 id: attn-decode-longctx
 title: Speed up single-token decode attention at 32k context with a better tiling
-status: vetoed
+status: pre_registered
 date: 2026-11-14
-rules_sha256: "966715a7dfe9df58e71175719fa3f62226d474e368adc42c177fe7d17416bea2"
-rules_version: "1.1.0"
-re_pinned_note: >
-  Re-gated under rules 1.1.0 on 2026-11-14. Nothing about the case changed: the
-  same-bytes floor it already recorded (torch.sum over K and V, 0.0614 ms) is
-  now an input to the gate instead of a note in the evidence file.
+
+# Template — no measurement data is published here. This case must be
+# re-measured on third-party cloud hardware before it can produce a verdict.
 
 hypothesis: >
   At B=1, 32 query heads, 8 KV heads, head_dim 128 and a 32k cache, one decode
-  step streams 128 MiB of K and V. Against the analytic 3.30 TB/s floor
-  (0.0407 ms) the measured 0.0636 ms looks like 1.56x of headroom, so a
-  tiling/scheduling rewrite of the attention kernel is claimed to recover a
-  large part of it.
-
-post_measurement_note: >
-  The hypothesis above is the pre-registration and is left unedited. It is
-  falsified by the measurement: a trivial kernel that only reads the same
-  128 MiB takes 0.0614 ms, i.e. 1.035x of the measured attention latency. The
-  apparent 1.56x headroom is an artefact of the 3.30 TB/s copy-bandwidth
-  constant, which is unreachable for a read-dominated 128 MiB stream on this
-  host (measured read ceiling 2.19 TB/s here).
+  step streams 128 MiB of K and V. A tiling/scheduling rewrite of the attention
+  kernel is claimed to recover a large part of the gap to a same-bytes read
+  ceiling.
 
 workload:
   kind: attn_decode_step
@@ -35,45 +23,18 @@ workload:
     weights: 0
     output: 0
   flops: 536870912            # 4 * q_heads * ctx * head_dim
-  measured_ms:
-    - 0.06771200150251389
-    - 0.06281600147485733
-    - 0.06275200098752975
-    - 0.06691200286149979
-    - 0.066880002617836
-    - 0.062272001057863235
-    - 0.06163199990987778
-    - 0.06307200342416763
-    - 0.0663679987192154
-    - 0.06694400310516357
-    - 0.06345599889755249
-    - 0.06380800157785416
-    - 0.06083200126886368
-    - 0.06163199990987778
-    - 0.06639999896287918
-    - 0.06374400109052658
-    - 0.06406400352716446
-    - 0.06275200098752975
-    - 0.06137600168585777
-    - 0.0674239993095398
-  measurement_source: "cases/attn-decode-longctx/evidence/baseline_20261114T080655.json#rows[ctx=32768]"
-  empirical_floor_ms: 0.061424
-  empirical_floor_source: "cases/attn-decode-longctx/evidence/baseline_20261114T080655.json#rows[ctx=32768].ceiling_median_ms"
-  noise_cv: 0.0356
 
 mechanism:
   name: retile the decode attention kernel to stream K/V at the read ceiling
   class: tiling
   removable_bytes: 0
-  removable_ms: 0.002176
-  removable_ms_source: "cases/attn-decode-longctx/evidence/baseline_20261114T080655.json#rows[ctx=32768].ceiling_median_ms"
   removable_flops: 0
   addressable_share_claim: 1.0
   justification: >
-    Attention reads exactly the bytes the ceiling kernel reads, so the only
-    reachable saving is the gap between measured latency and the time a
-    same-bytes read takes. That gap is 2.18 us at 32k context, 3.4 % of the
-    operator. No byte can be removed: KV cache is dense and fully consumed.
+    Attention reads exactly the bytes a same-bytes reference kernel reads, so
+    the only reachable saving is the gap between measured latency and the time
+    a same-bytes read takes. No byte can be removed: the KV cache is dense and
+    fully consumed.
 
 measurement_plan:
   baseline: "SDPA decode, one 32k KV cache, CUDA events per launch"
