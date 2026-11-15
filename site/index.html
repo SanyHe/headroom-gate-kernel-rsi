@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Headroom Gate — price the ceiling before writing the kernel</title>
+<title>Headroom Gate — work out the hardware ceiling before writing the kernel</title>
 <meta name="description" content="A pre-registered gate for GPU kernel work: compulsory bytes, a measured floor, a predicted upper bound, and one held-out run. One measured case on RTX 6000D, five pre-registered templates.">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -21,8 +21,8 @@
       </nav>
     </div>
     <p class="eyebrow" data-i18n="hero.eyebrow">Kernel research · pre-registered · replayable</p>
-    <h1 data-i18n="hero.title">Price the ceiling before you write the kernel.</h1>
-    <p class="lead" data-i18n="hero.lead">Most kernel write-ups never state a ceiling, so any gain looks like progress. This project makes the ceiling an input: compulsory bytes, a measured floor, a predicted upper bound. One measured case on the AutoDL RTX 6000D replays offline; five pre-registered templates await third-party cloud measurement.</p>
+    <h1 data-i18n="hero.title">Work out the hardware ceiling before you write the kernel.</h1>
+    <p class="lead" data-i18n="hero.lead">Most kernel work only asks “how much faster than before”, never “how much headroom is left against the hardware”. This project flips the order: work out the lowest time the bytes and FLOPs allow (floor), then how much a rewrite could possibly win (ceiling), and only then decide whether it is worth writing. GO if the conservative estimate clears 1.3× — worth building. Under 1.15× is NO-GO. In between is INCONCLUSIVE: an open question, not a failure. One measured case on the AutoDL RTX 6000D replays offline; five pre-registered templates await third-party cloud measurement.</p>
     <div class="statstrip" id="statstrip" aria-live="polite"></div>
   </div>
 </header>
