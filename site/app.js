@@ -41,6 +41,22 @@
       "kpi.realised.sub": "Triton kernel, 95% paired CI",
       "kpi.ratio": "Realised / predicted",
       "kpi.ratio.sub": "how much of the priced gain the kernel kept",
+      "fusion.title": "How the fusion works",
+      "fusion.lead": "The shipped PyTorch path launches two kernels and round-trips a 58.7 MB silu intermediate. Fused: one kernel, one pass, 117.4 MB total instead of 234.8 MB.",
+      "fusion.pathA": "Shipped path — two kernels",
+      "fusion.pathB": "Fused kernel — one pass",
+      "fusion.input": "input buffer",
+      "fusion.gate": "gate [B, H]",
+      "fusion.up": "up [B, H]",
+      "fusion.silu": "silu(gate)",
+      "fusion.mul": "× up",
+      "fusion.fused": "silu(gate) × up",
+      "fusion.mid": "silu intermediate",
+      "fusion.output": "output [B, H]",
+      "fusion.write": "write",
+      "fusion.read": "read",
+      "fusion.total": "total traffic",
+      "fusion.saved": "saved",
       "dispatch.title": "Three ways to move the same bytes",
       "dispatch.lead": "Shipped PyTorch path, a Triton kernel, and a compiled CUDA op. Every arm is bit-identical to the shipped output; only the time differs.",
       "dispatch.th.shape": "Shape",
@@ -98,6 +114,22 @@
       "kpi.realised.sub": "Triton Kernel，95% 配对置信区间",
       "kpi.ratio": "实测 / 预测",
       "kpi.ratio.sub": "定价收益里Kernel真正保住的比例",
+      "fusion.title": "融合是怎么工作的",
+      "fusion.lead": "现有 PyTorch 路径启动两个 kernel，并把 58.7 MB 的 silu 中间结果写回显存再读一次。融合版：一个 kernel，一遍读，总流量从 234.8 MB 降到 117.4 MB。",
+      "fusion.pathA": "现有路径 — 两个 kernel",
+      "fusion.pathB": "融合 kernel — 单遍",
+      "fusion.input": "输入 buffer",
+      "fusion.gate": "gate [B, H]",
+      "fusion.up": "up [B, H]",
+      "fusion.silu": "silu(gate)",
+      "fusion.mul": "× up",
+      "fusion.fused": "silu(gate) × up",
+      "fusion.mid": "silu 中间结果",
+      "fusion.output": "输出 [B, H]",
+      "fusion.write": "写",
+      "fusion.read": "读",
+      "fusion.total": "总流量",
+      "fusion.saved": "省掉",
       "dispatch.title": "同一批字节，三种走法",
       "dispatch.lead": "PyTorch 现有路径、Triton Kernel、编译版 CUDA 算子。三臂输出逐位一致，差别只在时间。",
       "dispatch.th.shape": "形状",
@@ -258,6 +290,172 @@
     cross.textContent = lang === "zh"
       ? `常数 ${num(data.host.hbm_realistic_tbs, 3)} TB/s 在 ${shapes.length} 个形状上复核：${gains}，全部逐位一致。`
       : `The constant ${num(data.host.hbm_realistic_tbs, 3)} TB/s was exercised at ${shapes.length} shapes: ${gains}, all bit-identical.`;
+  }
+
+  function renderFusionDiagram() {
+    const wrap = document.getElementById("fusion-diagram");
+    wrap.replaceChildren();
+    const W = 800, H = 480;
+    const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+      "aria-label": "SwiGLU fusion: shipped two-kernel path vs fused single-pass kernel" });
+
+    // Reusable color refs (CSS var hex)
+    const C = {
+      text: "#e6edf3", muted: "#93a3af", dim: "#5f717e",
+      line: "#222b34", accent: "#7cc7ff", go: "#58e0a3", nogo: "#ff7f6e",
+    };
+    const mono = { "font-family": "ui-monospace, SFMono-Regular, Menlo, monospace", "font-size": "11px", fill: C.muted };
+    const sans = { "font-family": "-apple-system, Noto Sans SC, sans-serif", "font-size": "11px", fill: C.muted };
+    const label = { "font-family": "-apple-system, Noto Sans SC, sans-serif", "font-size": "12px", fill: C.text, "font-weight": "500" };
+
+    // Two panels: left = shipped, right = fused
+    const LPANEL_X = 10, RPANEL_X = 420, PANEL_W = 370;
+
+    // ── Left panel: shipped path ──────────────────────────────────
+    // Panel frame (subtle)
+    svg.append(svgEl("rect", { x: LPANEL_X, y: 12, width: PANEL_W, height: 450,
+      rx: 10, fill: "none", stroke: C.line, "stroke-width": 1 }));
+
+    // Panel label
+    svg.append(svgEl("text", { x: LPANEL_X + 16, y: 36, ...label }, t("fusion.pathA")));
+
+    // input buffer [gate | up]
+    const inpY = 54, inpH = 58, inpW = PANEL_W - 40, inpX = LPANEL_X + 20;
+    const gateW = inpW / 2;
+    svg.append(svgEl("rect", { x: inpX, y: inpY, width: inpW, height: inpH, rx: 6,
+      fill: "none", stroke: C.line, "stroke-width": 1 }));
+    svg.append(svgEl("line", { x1: inpX + gateW, y1: inpY + 4, x2: inpX + gateW, y2: inpY + inpH - 4,
+      stroke: C.line, "stroke-width": 1, "stroke-dasharray": "3 3" }));
+    svg.append(svgEl("text", { x: inpX + gateW / 2, y: inpY + 25, ...sans, "text-anchor": "middle", fill: C.text }, t("fusion.gate")));
+    svg.append(svgEl("text", { x: inpX + gateW + gateW / 2, y: inpY + 25, ...sans, "text-anchor": "middle", fill: C.text }, t("fusion.up")));
+    svg.append(svgEl("text", { x: inpX + inpW / 2, y: inpY + 46, ...mono, "text-anchor": "middle" }, "[B, 2H] bf16  ·  117.4 MB"));
+
+    // Arrow gate → silu
+    const arrow1Y1 = inpY + inpH, arrow1Y2 = 128;
+    svg.append(svgEl("line", { x1: inpX + gateW / 2, y1: arrow1Y1,
+      x2: inpX + gateW / 2, y2: arrow1Y2, stroke: C.dim, "stroke-width": 1.5, "marker-end": "url(#arr)" }));
+
+    // silu kernel box
+    const siluX = inpX + 20, siluY = 128, siluW = 130, siluH = 44;
+    svg.append(svgEl("rect", { x: siluX, y: siluY, width: siluW, height: siluH, rx: 6,
+      fill: "rgba(124,199,255,0.08)", stroke: C.accent, "stroke-width": 1.2 }));
+    svg.append(svgEl("text", { x: siluX + siluW / 2, y: siluY + 19, ...sans, "text-anchor": "middle", fill: C.text }, t("fusion.silu")));
+    svg.append(svgEl("text", { x: siluX + siluW / 2, y: siluY + 34, ...mono, "text-anchor": "middle" }, "kernel A"));
+
+    // Arrow silu → mid
+    const arrow2Y1 = siluY + siluH, arrow2Y2 = 206;
+    svg.append(svgEl("line", { x1: siluX + siluW / 2, y1: arrow2Y1,
+      x2: siluX + siluW / 2, y2: arrow2Y2 - 4, stroke: C.dim, "stroke-width": 1.5, "marker-end": "url(#arr)" }));
+    svg.append(svgEl("text", { x: siluX + siluW / 2 + 8, y: (arrow2Y1 + arrow2Y2 - 4) / 2, ...mono },
+      `${t("fusion.write")} 58.7 MB`));
+
+    // mid buffer (dashed red — the extra round-trip)
+    const midX = siluX, midY = arrow2Y2, midW = 130, midH = 44;
+    svg.append(svgEl("rect", { x: midX, y: midY, width: midW, height: midH, rx: 6,
+      fill: "rgba(255,127,110,0.05)", stroke: C.nogo, "stroke-width": 1.2, "stroke-dasharray": "5 3" }));
+    svg.append(svgEl("text", { x: midX + midW / 2, y: midY + 19, ...sans, "text-anchor": "middle", fill: C.nogo }, t("fusion.mid")));
+    svg.append(svgEl("text", { x: midX + midW / 2, y: midY + 34, ...mono, "text-anchor": "middle", fill: C.nogo }, "58.7 MB  ← round-trip"));
+
+    // mid → mul arrow (bends to center)
+    const mulX = LPANEL_X + 95, mulY = 292, mulW = 160, mulH = 44;
+    svg.append(svgEl("path", { d: `M ${midX + midW / 2} ${midY + midH} L ${midX + midW / 2} ${midY + midH + 18} L ${mulX + 30} ${midY + midH + 18} L ${mulX + 30} ${mulY - 4}`,
+      fill: "none", stroke: C.nogo, "stroke-width": 1.3, "stroke-dasharray": "4 3", "marker-end": "url(#arrR)" }));
+    svg.append(svgEl("text", { x: mulX + 42, y: midY + midH + 14, ...mono, fill: C.nogo },
+      `${t("fusion.read")} 58.7 MB`));
+
+    // up → mul arrow (separate branch from input buffer's up half)
+    svg.append(svgEl("path", { d: `M ${inpX + gateW + gateW / 2} ${inpY + inpH} L ${inpX + gateW + gateW / 2} ${inpY + inpH + 200} L ${mulX + mulW - 28} ${inpY + inpH + 200} L ${mulX + mulW - 28} ${mulY - 4}`,
+      fill: "none", stroke: C.dim, "stroke-width": 1.2, "stroke-dasharray": "3 3", "marker-end": "url(#arr)" }));
+
+    // mul kernel box
+    svg.append(svgEl("rect", { x: mulX, y: mulY, width: mulW, height: mulH, rx: 6,
+      fill: "rgba(124,199,255,0.08)", stroke: C.accent, "stroke-width": 1.2 }));
+    svg.append(svgEl("text", { x: mulX + mulW / 2, y: mulY + 19, ...sans, "text-anchor": "middle", fill: C.text }, t("fusion.mul")));
+    svg.append(svgEl("text", { x: mulX + mulW / 2, y: mulY + 34, ...mono, "text-anchor": "middle" }, "kernel B"));
+
+    // mul → output arrow
+    const outX = LPANEL_X + 110, outY = 368, outW = 140, outH = 44;
+    svg.append(svgEl("line", { x1: mulX + mulW / 2, y1: mulY + mulH,
+      x2: mulX + mulW / 2, y2: outY - 4, stroke: C.dim, "stroke-width": 1.5, "marker-end": "url(#arr)" }));
+    svg.append(svgEl("text", { x: mulX + mulW / 2 + 8, y: mulY + mulH + 16, ...mono },
+      `${t("fusion.write")} 58.7 MB`));
+
+    // output buffer
+    svg.append(svgEl("rect", { x: outX, y: outY, width: outW, height: outH, rx: 6,
+      fill: "rgba(88,224,163,0.06)", stroke: C.go, "stroke-width": 1.2 }));
+    svg.append(svgEl("text", { x: outX + outW / 2, y: outY + 19, ...sans, "text-anchor": "middle", fill: C.go }, t("fusion.output")));
+    svg.append(svgEl("text", { x: outX + outW / 2, y: outY + 34, ...mono, "text-anchor": "middle" }, "58.7 MB bf16"));
+
+    // stats line
+    svg.append(svgEl("text", { x: LPANEL_X + PANEL_W / 2, y: 452, ...sans, "text-anchor": "middle", fill: C.dim },
+      `${t("fusion.total")}: read 234.8 MB  ·  write 117.4 MB  ·  0.235 ms`));
+
+    // ── Right panel: fused path ────────────────────────────────────
+    svg.append(svgEl("rect", { x: RPANEL_X, y: 12, width: PANEL_W, height: 450,
+      rx: 10, fill: "none", stroke: C.line, "stroke-width": 1 }));
+
+    svg.append(svgEl("text", { x: RPANEL_X + 16, y: 36, ...label }, t("fusion.pathB")));
+
+    // input buffer (same layout)
+    const rInpX = RPANEL_X + 20, rInpW = inpW;
+    svg.append(svgEl("rect", { x: rInpX, y: inpY, width: rInpW, height: inpH, rx: 6,
+      fill: "none", stroke: C.line, "stroke-width": 1 }));
+    svg.append(svgEl("line", { x1: rInpX + gateW, y1: inpY + 4, x2: rInpX + gateW, y2: inpY + inpH - 4,
+      stroke: C.line, "stroke-width": 1, "stroke-dasharray": "3 3" }));
+    svg.append(svgEl("text", { x: rInpX + gateW / 2, y: inpY + 25, ...sans, "text-anchor": "middle", fill: C.text }, t("fusion.gate")));
+    svg.append(svgEl("text", { x: rInpX + gateW + gateW / 2, y: inpY + 25, ...sans, "text-anchor": "middle", fill: C.text }, t("fusion.up")));
+    svg.append(svgEl("text", { x: rInpX + rInpW / 2, y: inpY + 46, ...mono, "text-anchor": "middle" }, "[B, 2H] bf16  ·  117.4 MB"));
+
+    // gate → fused arrow
+    const fusedY = 128, fusedH = 60;
+    svg.append(svgEl("line", { x1: rInpX + gateW / 2, y1: inpY + inpH,
+      x2: rInpX + gateW / 2, y2: fusedY - 4, stroke: C.dim, "stroke-width": 1.5, "marker-end": "url(#arr)" }));
+    // up → fused arrow
+    svg.append(svgEl("line", { x1: rInpX + gateW + gateW / 2, y1: inpY + inpH,
+      x2: rInpX + gateW + gateW / 2, y2: fusedY - 4, stroke: C.dim, "stroke-width": 1.5, "marker-end": "url(#arr)" }));
+
+    // fused kernel box (wider, spans entire input width)
+    const fusedX = rInpX + 5, fusedW = rInpW - 10;
+    svg.append(svgEl("rect", { x: fusedX, y: fusedY, width: fusedW, height: fusedH, rx: 8,
+      fill: "rgba(88,224,163,0.10)", stroke: C.go, "stroke-width": 1.4 }));
+    svg.append(svgEl("text", { x: fusedX + fusedW / 2, y: fusedY + 26, ...sans, "text-anchor": "middle", fill: C.go, "font-weight": "500" }, t("fusion.fused")));
+    svg.append(svgEl("text", { x: fusedX + fusedW / 2, y: fusedY + 46, ...mono, "text-anchor": "middle", fill: C.go }, "one pass  ·  one launch"));
+
+    // fused → output arrow
+    const rOutY = 220, rOutH = 44, rOutW = 160, rOutX = RPANEL_X + 95;
+    svg.append(svgEl("line", { x1: fusedX + fusedW / 2, y1: fusedY + fusedH,
+      x2: fusedX + fusedW / 2, y2: rOutY - 4, stroke: C.dim, "stroke-width": 1.5, "marker-end": "url(#arr)" }));
+    svg.append(svgEl("text", { x: fusedX + fusedW / 2 + 8, y: fusedY + fusedH + 16, ...mono },
+      `${t("fusion.write")} 58.7 MB`));
+
+    // output buffer
+    svg.append(svgEl("rect", { x: rOutX, y: rOutY, width: rOutW, height: rOutH, rx: 6,
+      fill: "rgba(88,224,163,0.06)", stroke: C.go, "stroke-width": 1.2 }));
+    svg.append(svgEl("text", { x: rOutX + rOutW / 2, y: rOutY + 19, ...sans, "text-anchor": "middle", fill: C.go }, t("fusion.output")));
+    svg.append(svgEl("text", { x: rOutX + rOutW / 2, y: rOutY + 34, ...mono, "text-anchor": "middle" }, "58.7 MB bf16"));
+
+    // saved highlight box
+    const savedY = rOutY + rOutH + 16;
+    svg.append(svgEl("rect", { x: RPANEL_X + 20, y: savedY, width: PANEL_W - 40, height: 56, rx: 8,
+      fill: "rgba(88,224,163,0.06)", stroke: C.go, "stroke-width": 1 }));
+    svg.append(svgEl("text", { x: RPANEL_X + PANEL_W / 2, y: savedY + 22, ...sans, "text-anchor": "middle", fill: C.text, "font-weight": "500" },
+      `${t("fusion.saved")} 117.4 MB`));
+    svg.append(svgEl("text", { x: RPANEL_X + PANEL_W / 2, y: savedY + 40, ...mono, "text-anchor": "middle", fill: C.go },
+      "eliminated intermediate round-trip  ·  0.122 ms (1.92× faster)"));
+
+    // stats line
+    svg.append(svgEl("text", { x: RPANEL_X + PANEL_W / 2, y: 452, ...sans, "text-anchor": "middle", fill: C.dim },
+      `${t("fusion.total")}: read 117.4 MB  ·  write 58.7 MB  ·  0.122 ms`));
+
+    // ── Marker defs (arrowheads) ───────────────────────────────────
+    const defs = svgEl("defs");
+    defs.append(svgEl("marker", { id: "arr", viewBox: "0 0 8 8", refX: 7, refY: 4,
+      markerWidth: 6, markerHeight: 6, orient: "auto" },
+      svgEl("path", { d: "M0,0 L8,4 L0,8 z", fill: C.dim })));
+    defs.append(svgEl("marker", { id: "arrR", viewBox: "0 0 8 8", refX: 7, refY: 4,
+      markerWidth: 6, markerHeight: 6, orient: "auto" },
+      svgEl("path", { d: "M0,0 L8,4 L0,8 z", fill: C.nogo })));
+    svg.prepend(defs);
   }
 
   function sealedChart() {
@@ -480,6 +678,7 @@
     renderStats();
     renderCases();
     renderHost();
+    renderFusionDiagram();
     sealedChart();
     dispatchChart();
     renderDispatchTable();

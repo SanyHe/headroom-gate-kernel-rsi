@@ -79,6 +79,15 @@
     </div>
     <p class="section-lead" data-i18n="host.lead">The GO case was registered and measured on the AutoDL RTX 6000D. The candidate was written only after the ceiling was fixed.</p>
     <div class="kpis" id="host-kpis"></div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3 data-i18n="fusion.title">How the fusion works</h3>
+      </div>
+      <p class="panel-note" data-i18n="fusion.lead">The shipped PyTorch path launches two kernels and round-trips a 58.7 MB silu intermediate. Fused: one kernel, one pass, 117.4 MB total instead of 234.8 MB.</p>
+      <div id="fusion-diagram" class="chart"></div>
+    </div>
+
     <div class="panel">
       <div class="panel-head">
         <h3 data-i18n="sealed.title">Held-out shapes</h3>
