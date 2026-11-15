@@ -449,13 +449,16 @@
 
     // ── Marker defs (arrowheads) ───────────────────────────────────
     const defs = svgEl("defs");
-    defs.append(svgEl("marker", { id: "arr", viewBox: "0 0 8 8", refX: 7, refY: 4,
-      markerWidth: 6, markerHeight: 6, orient: "auto" },
-      svgEl("path", { d: "M0,0 L8,4 L0,8 z", fill: C.dim })));
-    defs.append(svgEl("marker", { id: "arrR", viewBox: "0 0 8 8", refX: 7, refY: 4,
-      markerWidth: 6, markerHeight: 6, orient: "auto" },
-      svgEl("path", { d: "M0,0 L8,4 L0,8 z", fill: C.nogo })));
+    const arrowDim = svgEl("marker", { id: "arr", viewBox: "0 0 8 8", refX: 7, refY: 4,
+      markerWidth: 6, markerHeight: 6, orient: "auto" });
+    arrowDim.append(svgEl("path", { d: "M0,0 L8,4 L0,8 z", fill: C.dim }));
+    const arrowRed = svgEl("marker", { id: "arrR", viewBox: "0 0 8 8", refX: 7, refY: 4,
+      markerWidth: 6, markerHeight: 6, orient: "auto" });
+    arrowRed.append(svgEl("path", { d: "M0,0 L8,4 L0,8 z", fill: C.nogo }));
+    defs.append(arrowDim, arrowRed);
     svg.prepend(defs);
+
+    wrap.append(svg);
   }
 
   function sealedChart() {
