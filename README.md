@@ -1,17 +1,31 @@
 # Headroom-Gate Kernel RSI
 
-A falsifiable gate for GPU kernel work. Before optimizing anything, price the
-ceiling from a byte/FLOP ledger; after measuring, let one held-out run decide.
+**Work out the hardware ceiling before you write the kernel.**
 
-Most kernel write-ups fail in the same direction: the ceiling is never stated, so
-any gain looks like progress. This repo makes the ceiling an input. One measured
-case on the AutoDL RTX 6000D replays to its archived verdict on a laptop with no
-GPU, because the gate is pure arithmetic over recorded measurements. Five
-additional cases ship as pre-registered templates with no measurement data — they
-must be re-measured on third-party cloud hardware before they can produce a
-verdict.
+Most kernel work only asks "how much faster than before", never "how much
+headroom is left against the hardware". This project flips the order: work out
+the lowest time the bytes and FLOPs allow (floor), then how much a rewrite could
+possibly win (ceiling), and only then decide whether it is worth writing. GO if
+the conservative estimate clears 1.3x — worth building. Under 1.15x is NO-GO. In
+between is INCONCLUSIVE: an open question, not a failure.
+
+One measured case on the AutoDL RTX 6000D replays its archived verdict on a
+laptop with no GPU, because the gate is pure arithmetic over recorded
+measurements. Five more cases ship as pre-registered templates with no
+measurement data — they must be re-measured on third-party cloud hardware before
+they can produce a verdict.
 
 **English** · [简体中文](./README.zh-CN.md) · [Results board](https://sanyhe.github.io/headroom-gate-kernel-rsi/)
+
+## How it fits together
+
+![Headroom gate flow](docs/assets/gate-flow.svg)
+
+A case and the frozen rules go in; a verdict comes out. Everything inside the
+gate is arithmetic over numbers that were recorded beforehand, so the same inputs
+give the same verdict on any machine, with or without a GPU. The one thing the
+gate cannot do is measure — that happens once, on a cloud GPU, and lands in
+`case.yaml` as `measured_ms`.
 
 ## The gate in one screen
 
@@ -26,9 +40,9 @@ verdict.
    A mechanism cannot remove more time than the bytes or the time it touches.
 5. **Band.** A 5–95 % bootstrap over the repeats. Kinks inside the band are
    evaluated explicitly: `speedup(t)` is non-monotonic once a cap binds.
-6. **Verdict.** `GO` only if the conservative end clears 1.30× **and** a
-   same-bytes empirical floor exists. `NO-GO` if the generous end is below 1.15×.
-   Everything else is `INCONCLUSIVE` — an honest answer, not a failure.
+6. **Verdict.** `GO` needs the conservative end at or above 1.30x, plus a
+   same-bytes floor, at least 5 repeats and CV within 2%. `NO-GO` if even the
+   generous end stays under 1.15x; everything else falls through.
 
 ```bash
 python3 -m gate.cli --all
@@ -46,6 +60,25 @@ python3 -m gate.cli --all
 The published result is the one GO case measured on third-party cloud hardware.
 The five templates are pre-registered designs with no measurement data; they show
 the methodology and can be re-measured on any third-party cloud GPU.
+
+## How the measured fusion works
+
+The gate and `x[:, :H]` sit in one `[B, 2H]` bf16 buffer. The shipped PyTorch
+path allocates a `[B, H]` intermediate and round-trips it through HBM; the fused
+kernel reads the same input once and writes the output once.
+
+```
+shipped    x[B,2H] --silu--> tmp[B,H] 58.7 MB --mul--> y[B,H]
+           2 launches  ·  read 234.8 MB  ·  write 117.4 MB  ·  0.235 ms
+
+fused      x[B,2H] --silu_and_mul-----------------------> y[B,H]
+           1 launch    ·  read 117.4 MB  ·  write  58.7 MB  ·  0.122 ms
+```
+
+Nothing is recomputed and nothing is approximated: the fused kernel is bitwise
+identical to the shipped path, so the only change is 117.4 MB of traffic that
+stops happening. At B=4096 the step is launch-bound, which is why the same
+fusion measures 1.00x at model level (see [03](./docs/en/03-eval.md#6-second-host-a-boundary-condition-result)).
 
 ## Quickstart
 

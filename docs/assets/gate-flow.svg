@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800" width="1000" height="800" role="img" aria-labelledby="title desc">
+  <title id="title">Headroom gate data flow</title>
+  <desc id="desc">A case and the frozen rules enter a pure validation and arithmetic gate; the gate emits gate_verdict.json, an append-only ledger, and the results board.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8698a8"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b3382f"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="800" fill="#ffffff"/>
+
+  <!-- inputs -->
+  <rect x="70" y="64" width="330" height="104" rx="12" fill="#f4f7fa" stroke="#d7dee7"/>
+  <text x="92" y="94" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="700" fill="#16202b">case.yaml</text>
+  <text x="92" y="120" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="12" fill="#5f6b7a">hypothesis · shapes · bytes · flops</text>
+  <text x="92" y="140" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="12" fill="#5f6b7a">mechanism claim · measured_ms</text>
+
+  <rect x="600" y="64" width="330" height="104" rx="12" fill="#f4f7fa" stroke="#d7dee7"/>
+  <text x="622" y="94" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="700" fill="#16202b">protocol/gate_rules.yaml</text>
+  <text x="622" y="120" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="12" fill="#5f6b7a">device constants · thresholds · scope</text>
+  <text x="622" y="140" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="12" fill="#5f6b7a">frozen; every verdict pins its sha256</text>
+
+  <!-- into validate -->
+  <path d="M235,168 V196 H500 V210" fill="none" stroke="#8698a8" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <path d="M765,168 V196 H500" fill="none" stroke="#8698a8" stroke-width="1.6"/>
+
+  <rect x="370" y="212" width="260" height="60" rx="10" fill="#ffffff" stroke="#c3ccd8"/>
+  <text x="500" y="236" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="13" font-weight="700" fill="#16202b">validate case</text>
+  <text x="500" y="256" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="11.5" fill="#5f6b7a">fields · dtype · scope flags · rules hash</text>
+
+  <path d="M630,242 H698" fill="none" stroke="#b3382f" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow-red)"/>
+  <rect x="700" y="208" width="230" height="68" rx="10" fill="#fbeceb" stroke="#b3382f" stroke-dasharray="5 4"/>
+  <text x="815" y="233" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" font-weight="700" fill="#b3382f">INVALID</text>
+  <text x="815" y="252" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="11.5" fill="#8b4a44">case or ledger is wrong,</text>
+  <text x="815" y="268" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="11.5" fill="#8b4a44">not the kernel</text>
+
+  <!-- gate container -->
+  <path d="M500,272 V306" fill="none" stroke="#8698a8" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <rect x="60" y="306" width="880" height="206" rx="14" fill="#f8fbfa" stroke="#bcd9d3"/>
+  <text x="84" y="332" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" font-weight="700" fill="#1f4f47">gate/decide.py</text>
+  <text x="196" y="332" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="11.5" fill="#5f6b7a">pure function — no clock, no GPU, no I/O</text>
+
+  <!-- band -->
+  <rect x="500" y="348" width="200" height="48" rx="9" fill="#ffffff" stroke="#c3ccd8"/>
+  <text x="600" y="368" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="12" font-weight="600" fill="#16202b">measured repeats</text>
+  <text x="600" y="385" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="11" fill="#5f6b7a">5–95 % bootstrap band</text>
+  <path d="M600,396 V428" fill="none" stroke="#8698a8" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <!-- arithmetic row -->
+  <rect x="80" y="430" width="180" height="62" rx="9" fill="#ffffff" stroke="#c3ccd8"/>
+  <text x="170" y="452" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12.5" font-weight="700" fill="#16202b">bytes_total</text>
+  <text x="170" y="470" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="10.5" fill="#5f6b7a">weights + activations</text>
+  <text x="170" y="484" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="10.5" fill="#5f6b7a">+ output</text>
+
+  <path d="M260,461 H288" fill="none" stroke="#8698a8" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <rect x="290" y="430" width="180" height="62" rx="9" fill="#ffffff" stroke="#c3ccd8"/>
+  <text x="380" y="452" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12.5" font-weight="700" fill="#16202b">floor</text>
+  <text x="380" y="470" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="10.5" fill="#5f6b7a">max(bytes/BW, flops/FLOP)</text>
+  <text x="380" y="484" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="10.5" fill="#5f6b7a">same-bytes kernel raises it</text>
+
+  <path d="M470,461 H498" fill="none" stroke="#8698a8" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <rect x="500" y="430" width="180" height="62" rx="9" fill="#ffffff" stroke="#c3ccd8"/>
+  <text x="590" y="452" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12.5" font-weight="700" fill="#16202b">headroom</text>
+  <text x="590" y="470" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="10.5" fill="#5f6b7a">median − floor</text>
+  <text x="590" y="484" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="10.5" fill="#5f6b7a">the only slack that exists</text>
+
+  <path d="M680,461 H708" fill="none" stroke="#8698a8" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <rect x="710" y="430" width="180" height="62" rx="9" fill="#ffffff" stroke="#c3ccd8"/>
+  <text x="800" y="452" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12.5" font-weight="700" fill="#16202b">applied</text>
+  <text x="800" y="470" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="10.5" fill="#5f6b7a">min(claim × headroom,</text>
+  <text x="800" y="484" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="10.5" fill="#5f6b7a">bytes/BW, removable_ms)</text>
+
+  <!-- verdict -->
+  <path d="M500,512 V554" fill="none" stroke="#8698a8" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <rect x="280" y="556" width="440" height="72" rx="12" fill="#ffffff" stroke="#c3ccd8"/>
+  <text x="300" y="578" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="11" fill="#5f6b7a">verdict</text>
+  <rect x="300" y="586" width="86" height="28" rx="14" fill="#e8f6f0" stroke="#12805c"/>
+  <text x="343" y="605" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="700" fill="#12805c">GO</text>
+  <rect x="396" y="586" width="96" height="28" rx="14" fill="#fbeceb" stroke="#b3382f"/>
+  <text x="444" y="605" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="700" fill="#b3382f">NO-GO</text>
+  <rect x="502" y="586" width="190" height="28" rx="14" fill="#fdf3e2" stroke="#95651a"/>
+  <text x="597" y="605" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="700" fill="#95651a">INCONCLUSIVE</text>
+
+  <!-- outputs bus -->
+  <path d="M500,628 V650" fill="none" stroke="#8698a8" stroke-width="1.6"/>
+  <path d="M225,650 H775" fill="none" stroke="#8698a8" stroke-width="1.6"/>
+  <path d="M225,650 V670" fill="none" stroke="#8698a8" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <path d="M500,650 V670" fill="none" stroke="#8698a8" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <path d="M775,650 V670" fill="none" stroke="#8698a8" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <rect x="110" y="672" width="230" height="72" rx="10" fill="#f4f7fa" stroke="#d7dee7"/>
+  <text x="225" y="700" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" fill="#16202b">gate_verdict.json</text>
+  <text x="225" y="720" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="11" fill="#5f6b7a">generated, never hand-edited</text>
+
+  <rect x="385" y="672" width="230" height="72" rx="10" fill="#f4f7fa" stroke="#d7dee7"/>
+  <text x="500" y="700" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" fill="#16202b">ledger.jsonl</text>
+  <text x="500" y="720" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="11" fill="#5f6b7a">append-only events</text>
+
+  <rect x="660" y="672" width="230" height="72" rx="10" fill="#f4f7fa" stroke="#d7dee7"/>
+  <text x="775" y="700" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" fill="#16202b">site/data/results.json</text>
+  <text x="775" y="720" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="11" fill="#5f6b7a">the results board</text>
+
+  <text x="500" y="778" text-anchor="middle" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="11.5" fill="#5f6b7a">P1 ratchet: no realised speedup may exceed the predicted upper bound, checked mechanically over the ledger.</text>
+</svg>
