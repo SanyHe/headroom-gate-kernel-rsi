@@ -88,7 +88,8 @@ Measured on a second host (RTX 6000D, v2 constants): the operator reaches 1.92×
 fusion is 1.00×: a 4096-token prefill is launch-bound, so 8.3 ms of saved
 activation GPU time does not move the 506 ms step. That is the published boundary
 condition — see [03 — Evaluation](./docs/en/03-eval.md#6-second-host-a-boundary-condition-result).
-Still pending: the P3 low-bit pool measurement (policy frozen, pool unmeasured).
+Still pending: a registered P3 selection (exploratory timings exist; the pool has
+no accuracy trials).
 
 Because of that split, the five archived verdicts are replayed from the recorded
 `measured_ms` in `case.yaml`, not re-measured. Every sample used is embedded in

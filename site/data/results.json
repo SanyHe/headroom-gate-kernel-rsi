@@ -161,8 +161,8 @@
     "status": "pending",
     "policy_sha256": "46eb46c1945f8b09b3ba579c2d485a6e042265669672207a0dd9587f8e025fa8",
     "operators": ["rmsnorm", "softmax", "layernorm", "gemv"],
-    "note": "The policy is frozen; the pool has not been measured, so no low-bit claim is made here.",
-    "note_zh": "策略已冻结；池尚未测量，因此这里不声明任何低比特结论。"
+    "note": "Exploratory timings were collected on this host (p3/evidence/, 8 operators, 20 rounds, L2 flush), but no registered P3 selection was run: the pool has no low-bit arms and no accuracy trials, and the policy's task and accuracy scope was not reconciled. No low-bit claim is made.",
+    "note_zh": "已在本机采集探索性计时（p3/evidence/，8 个算子，20 轮，L2 flush），但没有运行注册过的 P3 选择：池里没有低比特臂，也没有精度 trial，且策略的任务与精度口径尚未对齐。因此不做任何低比特声明。"
   },
   "caveats": [
     {

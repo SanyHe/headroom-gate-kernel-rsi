@@ -135,6 +135,6 @@ Two deviations belong next to this result:
 - The third dispatch arm is vLLM's prebuilt `torch.ops._C.silu_and_mul`, because
   the host had no `nvcc`. It is a real compiled op, but not one this repo built.
 
-P3 is deferred: the frozen policy exists, but the pool has not been measured, so
-no low-bit claim is made.
+P3 has no registered selection: exploratory timings exist in `p3/evidence/`, but
+the pool has no low-bit arms or accuracy trials, so no low-bit claim is made.
 
