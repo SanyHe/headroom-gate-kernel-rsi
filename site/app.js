@@ -42,7 +42,7 @@
       "kpi.ratio": "Realised / predicted",
       "kpi.ratio.sub": "how much of the priced gain the kernel kept",
       "fusion.title": "How the fusion works",
-      "fusion.lead": "The shipped PyTorch path launches two kernels and round-trips a 58.7 MB silu intermediate. Fused: one kernel, one pass, 117.4 MB total instead of 234.8 MB.",
+      "fusion.lead": "The shipped PyTorch path launches two kernels and round-trips a 58.7 MB silu intermediate: 293.5 MB of traffic. Fused: one kernel, one pass, 176.1 MB.",
       "fusion.pathA": "Shipped path — two kernels",
       "fusion.pathB": "Fused kernel — one pass",
       "fusion.input": "input buffer",
@@ -115,7 +115,7 @@
       "kpi.ratio": "实测 / 预测",
       "kpi.ratio.sub": "定价收益里Kernel真正保住的比例",
       "fusion.title": "融合是怎么工作的",
-      "fusion.lead": "现有 PyTorch 路径启动两个 kernel，并把 58.7 MB 的 silu 中间结果写回显存再读一次。融合版：一个 kernel，一遍读，总流量从 234.8 MB 降到 117.4 MB。",
+      "fusion.lead": "现有 PyTorch 路径启动两个 kernel，把 58.7 MB 的 silu 中间结果写回显存再读一次，总流量 293.5 MB。融合版：一个 kernel，一遍读，总流量 176.1 MB。",
       "fusion.pathA": "现有路径 — 两个 kernel",
       "fusion.pathB": "融合 kernel — 单遍",
       "fusion.input": "输入 buffer",
@@ -388,7 +388,7 @@
 
     // stats line
     svg.append(svgEl("text", { x: LPANEL_X + PANEL_W / 2, y: 452, ...sans, "text-anchor": "middle", fill: C.dim },
-      `${t("fusion.total")}: read 234.8 MB  ·  write 117.4 MB  ·  0.235 ms`));
+      `${t("fusion.total")}: read 176.1 MB  ·  write 117.4 MB  ·  0.235 ms`));
 
     // ── Right panel: fused path ────────────────────────────────────
     svg.append(svgEl("rect", { x: RPANEL_X, y: 12, width: PANEL_W, height: 450,

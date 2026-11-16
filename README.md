@@ -69,10 +69,10 @@ kernel reads the same input once and writes the output once.
 
 ```
 shipped    x[B,2H] --silu--> tmp[B,H] 58.7 MB --mul--> y[B,H]
-           2 launches  ·  read 234.8 MB  ·  write 117.4 MB  ·  0.235 ms
+           2 launches  ·  read 176.1 MB  ·  write 117.4 MB  ·  total 293.5 MB  ·  0.235 ms
 
 fused      x[B,2H] --silu_and_mul-----------------------> y[B,H]
-           1 launch    ·  read 117.4 MB  ·  write  58.7 MB  ·  0.122 ms
+           1 launch    ·  read 117.4 MB  ·  write  58.7 MB  ·  total 176.1 MB  ·  0.122 ms
 ```
 
 Nothing is recomputed and nothing is approximated: the fused kernel is bitwise
